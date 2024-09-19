@@ -1,0 +1,20 @@
+{
+  "name": "wayforpay-ts-integration",
+  "version": "0.0.2",
+  "description": "Library for forms to go to the Wayforpay payment page.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/",
+    "package.json"
+  ],
+  "scripts": {
+    "build": "tsc"
+  },
+  "author": "Wlad1slav",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^22.5.5",
+    "typescript": "^5.6.2"
+  }
+}

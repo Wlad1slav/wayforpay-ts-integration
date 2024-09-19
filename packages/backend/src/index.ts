@@ -1,8 +1,8 @@
 import express, {Request, Response} from 'express';
-import createForm from "./utils/createForm";
-import {TCartElement, TProduct, TUserCartElement} from "./types";
 import cors from 'cors';
 import dotenv from 'dotenv';
+import {TCartElement, TProduct, TUserCartElement} from "wayforpay-ts-integration";
+import createForm from "wayforpay-ts-integration/dist/utils/createForm";
 
 dotenv.config();
 
