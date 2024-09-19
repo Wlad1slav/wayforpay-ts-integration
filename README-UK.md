@@ -1,0 +1,184 @@
+# 💳 wayforpay-ts-integration
+
+![MIT License](https://img.shields.io/badge/alpha-0.0.2-red.svg)
+![MIT License](https://img.shields.io/badge/license-ISC-green.svg)
+
+**wayforpay-ts-integration** пакет для зручної інтеграції з платіжною системою Wayforpay. Він дозволяє створювати редірект на сторінку оплати в будь-якій точці клієнтського коду. Після запиту до вашого API, пакет генерує форму, яку можна автоматично виконати на боці клієнта, перекидаючи його на сторінку оплати.
+
+🇬🇧 [English README.md](/README.md)
+
+## ✨ Features
+
+- [X] Генерація форми для редіректу на сторінку оплати з можливістю автоматичного виконання на клієнті
+- [X] Генерація підпису для безпечної перевірки транзакції
+- [ ] Заборона виконання небезпечних функцій на клієнтському боці
+- [ ] Відстеження статусу замовлення
+- [ ] Можливість скасування замовлення
+
+![checkout-demo](https://github.com/user-attachments/assets/5c451d67-83b7-41ae-8cf4-9a8359dd0d07)
+
+## 🚀 Інструкція з впровадження
+
+- [Створити магазин в wayforpay](#створити-магазин-в-wayforpay)
+- [Environment Variables](#environment-variables)
+- [Install package](#install-package)
+- [Usage](#usage)
+    - [Генерація форми](#генерація-форми)
+    - [Виконання форми](#виконання-форми)
+
+### 🏪 Створити магазин в wayforpay
+
+Авторизуйтесь на платформі Wayforpay через [офіційний сайт](https://m.wayforpay.com/account/site/login).
+
+Після авторизації, у боковому меню перейдіть до розділу `Налаштування магазину`. Ви побачите список ваших магазинів. Якщо магазину ще немає, натисніть `Створити магазин`. Не забудьте вказати домен магазину. Якщо ви ще не визначились з доменом, введіть тимчасовий.
+
+### 🔑 Environment Variables
+
+Після створення магазину перейдіть до його налаштувань. Там знайдіть картку з `Реквізитами мерчанта`, де ви знайдете `Merchant login` та `Merchant secret key`. Ці дані потрібно додати до файлу `.env` у кореневій директорії вашого проекту.
+
+- `DOMAIN` — домен вашого Wayforpay магазину
+- `CURRENCY` — валюта, що використовується у вашому магазині
+- `MERCHANT_LOGIN` — логін мерчанта з налаштувань магазину
+- `MERCHANT_SECRET_KEY` — секретний ключ мерчанта з налаштувань магазину
+
+> [!CAUTION]
+> **Не використовуйте** методи `createForm` та `createSignature` на клієнтській стороні. Це може скомпрометувати ваш секретний ключ. Використовуйте ці методи лише на сервері (наприклад, у вашому API).
+
+[Приклад файлу .env](https://github.com/Wlad1slav/wayforpay-ts-integration/blob/main/packages/backend/.env.example)
+
+### 📦 Install package
+
+Після налаштування магазину, встановіть npm пакет на ваш сервер Node.js:
+
+```bash
+npm i wayforpay-ts-integration
+```
+
+### 🛠 Usage
+
+#### 📝 Генерація форми
+
+На серверній частині необхідно згенерувати форму для редіректу користувача на сторінку оплати.
+
+```typescript
+import express, {Request, Response} from 'express';
+import dotenv from 'dotenv';
+
+import {TCartElement, TProduct, TUserCartElement} from "wayforpay-ts-integration";
+import createForm from "wayforpay-ts-integration/dist/utils/createForm";
+
+dotenv.config();
+
+const app = express();
+const port = 3000;
+
+app.use(express.json());
+
+const products: TProduct[] = [
+    {id: '1', name: "Example product 1", price: 100},
+    {id: '2', name: "Example product 2", price: 15},
+    {id: '3', name: "Example product 3", price: 700},
+    {id: '4', name: "Example product 4", price: 80},
+    {id: '5', name: "Example product 5", price: 300},
+];
+
+app.post('/api/wayforpay/checkout', async (req: Request, res: Response) => {
+    const {userCart}: {
+        userCart: TUserCartElement[];
+    } = req.body;
+
+    if (userCart && userCart.length > 0) {
+        const cart = userCart.map(item => {
+            const product = products.find(product => product.id === item.id);
+            if (product) {
+                return {
+                    quantity: item.quantity,
+                    product
+                } as TCartElement;
+            } else {
+                console.error(`Product with ID ${item.id} does not exist`);
+                return null;  // Return null for invalid products
+            }
+        }).filter(Boolean);  // Filter out null values from the array
+
+        // Creates a form for a request to wayforpay
+        const form = await createForm(cart as TCartElement[], {
+            deliveryList: "nova;ukrpost;other"
+        });
+
+        return res.send(form);
+    } else {
+        console.error('No product IDs were specified');
+    }
+});
+
+app.listen(port, () => {
+    console.log(`Server is running at http://localhost:${port}`);
+});
+```
+
+Функція `createForm` створює форму для оплати. Другий параметр — це об'єкт з конфігурацією, в яку можна передати будь-яке поле, [що підтримується Wayforpay](https://wiki.wayforpay.com/view/852102).
+
+```typescript
+const form = await createForm(cart as TCartElement[], {
+  deliveryList: "nova;ukrpost;other"
+});
+
+return res.send(form);
+```
+
+#### 📤 Виконання форми
+
+На клієнтській стороні форму необхідно вставити в DOM і автоматично виконати. Ось приклад React-компонента, який перекидає клієнта на сторінку оплати при натисненні кнопки:
+
+```typescript
+import axios from "axios";
+
+function GoToPaymentButton() {
+    const cart = [
+        { id: '1', quantity: 1 },
+        { id: '4', quantity: 7 },
+    ];
+
+    const handleGoToPay = async () => {
+        // Here is the domain of your server and the route by which the form is received
+        const response = await axios.post('http://localhost:3000/api/wayforpay/checkout', {
+            userCart: cart
+        });
+
+        // Gets form's HTML from the backend
+        const html = await response.data;
+
+        // Check if the container already exists, if not, create it
+        let handlePay = document.getElementById('handlePay');
+        if (!handlePay) {
+            handlePay = document.createElement('div');
+            handlePay.id = 'handlePay';
+            document.body.appendChild(handlePay);
+        }
+
+        // Add the form's HTML to the container
+        handlePay.innerHTML = html;
+
+        // Find and submit the form
+        const form = document.getElementById('wayforpayForm') as HTMLFormElement;
+        if (form) {
+            form.submit(); // Completes the form
+        }
+    };
+
+    return (
+        <button onClick={handleGoToPay} type="button">Go to payment</button>
+    );
+}
+
+export default GoToPaymentButton;
+```
+
+## Author
+
+[@Wlad1slav](https://github.com/Wlad1slav)
+
+## License
+
+ISC
