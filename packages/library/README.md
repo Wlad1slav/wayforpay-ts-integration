@@ -5,28 +5,26 @@
 
 **wayforpay-ts-integration** is a package for easy integration with the Wayforpay payment system. It allows you to create a redirect to the payment page at any point in the client-side code. After a request to your API, the package generates a form that can be automatically executed on the client-side, redirecting the user to the payment page.
 
-🇺🇦 [Українська README.md](/README-UK.md)
+[![Repository](https://img.shields.io/badge/repository-000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Wlad1slav/wayforpay-ts-integration)
+[![Українська локалізація](https://img.shields.io/badge/🇺🇦_Українська_README.md-white?style=for-the-badge)](https://github.com/Wlad1slav/wayforpay-ts-integration/blob/main/README-UK.md)
 
 ## ✨ Features
 
-- [X] Generation of a form for redirecting to the payment page with the ability to automatically execute it on the client
-- [X] Signature generation for secure transaction verification
-- [ ] Prohibition of unsafe functions on the client side
-- [ ] Order status tracking
-- [ ] Ability to cancel an order
+- Generation of a form for redirecting to the payment page with the ability to automatically execute it on the client
+- Signature generation for secure transaction verification
 
 ![checkout-demo](https://github.com/user-attachments/assets/5ceb9ac8-dcf5-4413-8ad8-9a6ffa1356dc)
 
 ## 🚀 Implementation Guide
 
-- Create a store in Wayforpay
+- Create a store in wayforpay
 - Environment Variables
 - Install package
 - Usage
-  - Form generation
-    - Express.js example
-    - Next.js example
-  - Form execution
+    - Form generation
+      - Express.js example
+      - Next.js example
+    - Form execution
 
 ### 🏪 Create a store in wayforpay
 
@@ -43,7 +41,6 @@ After creating the store, go to its settings. There, find the `Merchant details`
 - `MERCHANT_LOGIN` — the merchant login from the store settings
 - `MERCHANT_SECRET_KEY` — the merchant secret key from the store settings
 
-> [!CAUTION]
 > **Do not use** the `createForm` and `createSignature` methods on the client side. This may compromise your secret key. Use these methods only on the server side (for example, in your API).
 
 [Example .env file](https://github.com/Wlad1slav/wayforpay-ts-integration/blob/main/packages/backend/.env.example)

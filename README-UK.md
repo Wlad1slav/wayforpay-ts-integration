@@ -1,6 +1,6 @@
 # 💳 wayforpay-ts-integration
 
-![MIT License](https://img.shields.io/badge/alpha-0.0.2-red.svg)
+![Package version](https://img.shields.io/npm/v/wayforpay-ts-integration)
 ![MIT License](https://img.shields.io/badge/license-ISC-green.svg)
 
 **wayforpay-ts-integration** пакет для зручної інтеграції з платіжною системою Wayforpay. Він дозволяє створювати редірект на сторінку оплати в будь-якій точці клієнтського коду. Після запиту до вашого API, пакет генерує форму, яку можна автоматично виконати на боці клієнта, перекидаючи його на сторінку оплати.
@@ -15,16 +15,18 @@
 - [ ] Відстеження статусу замовлення
 - [ ] Можливість скасування замовлення
 
-![checkout-demo](https://github.com/user-attachments/assets/5c451d67-83b7-41ae-8cf4-9a8359dd0d07)
+![checkout-demo](https://github.com/user-attachments/assets/5ceb9ac8-dcf5-4413-8ad8-9a6ffa1356dc)
 
 ## 🚀 Інструкція з впровадження
 
-- [Створити магазин в wayforpay](#створити-магазин-в-wayforpay)
-- [Environment Variables](#environment-variables)
-- [Install package](#install-package)
-- [Usage](#usage)
-    - [Генерація форми](#генерація-форми)
-    - [Виконання форми](#виконання-форми)
+- Створити магазин в wayforpay
+- Environment Variables
+- Install package
+- Usage
+    - Генерація форми
+      - Express.js приклад
+      - Next.js приклад
+    - Виконання форми
 
 ### 🏪 Створити магазин в wayforpay
 
@@ -60,6 +62,7 @@ npm i wayforpay-ts-integration
 
 На серверній частині необхідно згенерувати форму для редіректу користувача на сторінку оплати.
 
+##### Express.js приклад
 ```typescript
 import express, {Request, Response} from 'express';
 import dotenv from 'dotenv';
@@ -117,6 +120,31 @@ app.listen(port, () => {
 });
 ```
 
+##### Next.js приклад (з app router)
+```typescript
+import createForm from "wayforpay-ts-integration/dist/utils/createForm";
+import {TCartElement, TUserCartElement} from "wayforpay-ts-integration";
+import {Product} from "@/lib/services/woocommerce-api";
+
+export async function POST(request: Request) {
+    const {cart: userCart}: {
+        cart: TUserCartElement[];
+    } = await request.json();
+
+    const cart = await Product.generateCart(userCart);
+
+    const form = await createForm(cart as TCartElement[], {
+        deliveryList: "nova;ukrpost;other"
+    });
+
+    return new Response(form, {
+        headers: {
+            'Content-Type': 'text/html',
+        },
+    });
+}
+```
+
 Функція `createForm` створює форму для оплати. Другий параметр — це об'єкт з конфігурацією, в яку можна передати будь-яке поле, [що підтримується Wayforpay](https://wiki.wayforpay.com/view/852102).
 
 ```typescript
@@ -131,7 +159,7 @@ return res.send(form);
 
 На клієнтській стороні форму необхідно вставити в DOM і автоматично виконати. Ось приклад React-компонента, який перекидає клієнта на сторінку оплати при натисненні кнопки:
 
-```typescript
+```tsx
 import axios from "axios";
 
 function GoToPaymentButton() {
