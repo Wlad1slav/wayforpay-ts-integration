@@ -14,7 +14,7 @@ const createForm = async (cart: TCartElement[], data: Record<string, string> = {
     const quantities = cart.map(item => item.quantity);
     const prices = cart.map(item => item.product.price);
 
-    const totalPrice = prices.reduce((acc, price) => acc + price, 0);
+    let totalPrice = prices.reduce((acc, price, i) => acc + price * quantities[i], 0);
 
     // Create a signature to securely verify the transaction
     const signature = createSignature({
