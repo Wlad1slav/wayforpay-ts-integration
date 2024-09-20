@@ -1,6 +1,6 @@
 {
   "name": "wayforpay-ts-integration",
-  "version": "0.0.4",
+  "version": "0.0.7",
   "description": "Library for forms to go to the Wayforpay payment page.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -11,10 +11,27 @@
   "scripts": {
     "build": "tsc"
   },
-  "author": "Wlad1slav",
+  "author": "Vladyslav Fokin <vlad.fokin2004.vf@gmail.com> (https://github.com/Wlad1slav)",
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^22.5.5",
     "typescript": "^5.6.2"
-  }
+  },
+  "keywords": [
+    "Wayforpay",
+    "Payment integration",
+    "TypeScript",
+    "Payment redirect",
+    "E-commerce",
+    "Form generation",
+    "API integration",
+    "Signature generation",
+    "Payment gateway",
+    "Express.js",
+    "Next.js",
+    "Checkout form",
+    "Wayforpay API",
+    "Online payments"
+  ],
+  "homepage": "https://github.com/Wlad1slav/wayforpay-ts-integration#readme"
 }

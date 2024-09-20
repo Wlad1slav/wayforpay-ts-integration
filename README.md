@@ -66,8 +66,12 @@ On the server side, you need to generate a form for redirecting the user to the 
 import express, {Request, Response} from 'express';
 import dotenv from 'dotenv';
 
-import {TCartElement, TProduct, TUserCartElement} from "wayforpay-ts-integration";
-import createForm from "wayforpay-ts-integration/dist/utils/createForm";
+import {
+  TCartElement,
+  TProduct,
+  TUserCartElement,
+  createForm
+} from "wayforpay-ts-integration";
 
 dotenv.config();
 
@@ -121,8 +125,11 @@ app.listen(port, () => {
 
 ##### Next.js example (with app router)
 ```typescript
-import createForm from "wayforpay-ts-integration/dist/utils/createForm";
-import {TCartElement, TUserCartElement} from "wayforpay-ts-integration";
+import {
+  TCartElement,
+  TUserCartElement,
+  createForm
+} from "wayforpay-ts-integration";
 import {Product} from "@/lib/services/woocommerce-api";
 
 export async function POST(request: Request) {

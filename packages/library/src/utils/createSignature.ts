@@ -1,6 +1,7 @@
 import * as crypto from 'crypto';
+import {envSpecifiedError} from "../messages";
 
-const createSignature = (data: {
+export const createSignature = (data: {
     orderDate: number;
     totalPrice: number;
     namesString: string;
@@ -10,6 +11,10 @@ const createSignature = (data: {
     const merchantSecret = process.env.MERCHANT_SECRET_KEY as string;
     const { DOMAIN: domain, MERCHANT_LOGIN: merchantLogin, CURRENCY: currency } = process.env;
 
+    if (!domain || !merchantSecret || !merchantLogin || !currency) {
+        console.error(envSpecifiedError);
+    }
+
     const signature = `${merchantLogin};${domain};${data.orderDate};${data.orderDate};${data.totalPrice};${currency};${data.namesString};${data.quantitiesString};${data.pricesString}`;
 
     return (
@@ -18,5 +23,3 @@ const createSignature = (data: {
             .digest('hex')
     );
 };
-
-export default createSignature;

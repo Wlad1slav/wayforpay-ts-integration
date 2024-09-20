@@ -1,13 +1,18 @@
-import createSignature from "./createSignature";
 import { TCartElement } from "../types";
+import {createSignature} from "./createSignature";
+import {envSpecifiedError} from "../messages";
 
 const arrayToHtmlArray = (name: string, array: (string | number)[]) =>
     array.map(element => `<input type="hidden" name="${name}[]" value="${element}" />`).join('\n');
 
-const createForm = async (cart: TCartElement[], data: Record<string, string> = {}) => {
+export const createForm = async (cart: TCartElement[], data: Record<string, string> = {}) => {
     const orderDate = Date.now();
 
     const { DOMAIN: domain, MERCHANT_LOGIN: merchantLogin, CURRENCY: currency } = process.env;
+
+    if (!domain || !merchantLogin || !currency) {
+        console.error(envSpecifiedError)
+    }
 
     // Extract product names, quantities, and prices from the cart
     const names = cart.map(item => item.product.name);
@@ -51,5 +56,3 @@ const createForm = async (cart: TCartElement[], data: Record<string, string> = {
     </form>
   `;
 };
-
-export default createForm;
