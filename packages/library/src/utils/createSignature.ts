@@ -1,5 +1,5 @@
 import * as crypto from 'crypto';
-import {envSpecifiedError} from "../messages";
+import {envSpecifiedError, notSupportedInBrowser} from "../messages";
 
 export const createSignature = (data: {
     orderDate: number;
@@ -8,6 +8,10 @@ export const createSignature = (data: {
     quantitiesString: string;
     pricesString: string;
 }) => {
+    if (typeof window !== 'undefined') {
+        throw new Error(notSupportedInBrowser);
+    }
+
     const merchantSecret = process.env.MERCHANT_SECRET_KEY as string;
     const { DOMAIN: domain, MERCHANT_LOGIN: merchantLogin, CURRENCY: currency } = process.env;
 

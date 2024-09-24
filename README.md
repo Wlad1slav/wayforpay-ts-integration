@@ -11,7 +11,7 @@
 
 - [X] Generation of a form for redirecting to the payment page with the ability to automatically execute it on the client
 - [X] Signature generation for secure transaction verification
-- [ ] Prohibition of unsafe functions on the client side
+- [X] Prohibition of unsafe functions on the client side
 - [ ] Order status tracking
 - [ ] Ability to cancel an order
 

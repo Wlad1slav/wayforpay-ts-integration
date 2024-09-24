@@ -12,6 +12,7 @@
 
 - Generation of a form for redirecting to the payment page with the ability to automatically execute it on the client
 - Signature generation for secure transaction verification
+- Prohibition of unsafe functions on the client side
 
 ![checkout-demo](https://github.com/user-attachments/assets/5ceb9ac8-dcf5-4413-8ad8-9a6ffa1356dc)
 

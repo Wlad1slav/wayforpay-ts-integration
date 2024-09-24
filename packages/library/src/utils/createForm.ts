@@ -1,11 +1,15 @@
 import { TCartElement } from "../types";
 import {createSignature} from "./createSignature";
-import {envSpecifiedError} from "../messages";
+import {envSpecifiedError, notSupportedInBrowser} from "../messages";
 
 const arrayToHtmlArray = (name: string, array: (string | number)[]) =>
     array.map(element => `<input type="hidden" name="${name}[]" value="${element}" />`).join('\n');
 
 export const createForm = async (cart: TCartElement[], data: Record<string, string> = {}) => {
+    if (typeof window !== 'undefined') {
+        throw new Error(notSupportedInBrowser);
+    }
+
     const orderDate = Date.now();
 
     const { DOMAIN: domain, MERCHANT_LOGIN: merchantLogin, CURRENCY: currency } = process.env;
