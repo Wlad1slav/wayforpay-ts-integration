@@ -4,3 +4,4 @@
 # Enviroment
 node_modules
 .env
+src/dev

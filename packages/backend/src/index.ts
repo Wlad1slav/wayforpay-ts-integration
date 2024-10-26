@@ -1,8 +1,16 @@
 import express, {Request, Response} from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import {TCartElement, TProduct, TUserCartElement} from "wayforpay-ts-integration";
-import createForm from "wayforpay-ts-integration/dist/utils/createForm";
+
+import {
+    TCartElement,
+    TProduct,
+    TUserCartElement,
+    Wayforpay
+} from "wayforpay-ts-integration-test";
+
+// import {TCartElement, TProduct, TUserCartElement} from "../dev/utils/types";
+// import {Wayforpay} from "../dev";
 
 dotenv.config();
 
@@ -39,9 +47,16 @@ app.post('/api/wayforpay/checkout', async (req: Request, res: Response) => {
             }
         }).filter(Boolean);  // Filter out null values from the array
 
+        const wayforpay = new Wayforpay({
+            merchantLogin: process.env.MERCHANT_LOGIN as string,
+            merchantSecret: process.env.MERCHANT_SECRET_KEY as string,
+            currency: process.env.CURRENCY as string,
+            domain: process.env.DOMAIN as string,
+        })
+
         // Creates a form for a request to wayforpay
-        const form = await createForm(cart as TCartElement[], {
-            deliveryList: "nova;ukrpost;other"
+        const form = await wayforpay.createForm(cart as TCartElement[], {
+            deliveryList: "nova;other"
         });
 
         return res.send(form);

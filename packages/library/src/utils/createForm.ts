@@ -5,6 +5,9 @@ import {envSpecifiedError, notSupportedInBrowser} from "../messages";
 const arrayToHtmlArray = (name: string, array: (string | number)[]) =>
     array.map(element => `<input type="hidden" name="${name}[]" value="${element}" />`).join('\n');
 
+/**
+ * @deprecated This feature is deprecated. Use the `createForm` method of the `Wayforpay` class instead.
+ */
 export const createForm = async (cart: TCartElement[], data: Record<string, string> = {}) => {
     if (typeof window !== 'undefined') {
         throw new Error(notSupportedInBrowser);

@@ -1,6 +1,9 @@
 import * as crypto from 'crypto';
 import {envSpecifiedError, notSupportedInBrowser} from "../messages";
 
+/**
+ * @deprecated This feature is deprecated. Use the `createSignature` method of the `Wayforpay` class instead.
+ */
 export const createSignature = (data: {
     orderDate: number;
     totalPrice: number;

@@ -16,3 +16,10 @@ export type TProduct = {
     name: string;
     price: number;
 };
+
+export type TWayforpayOptions = {
+    domain: string;
+    currency: string;
+    merchantLogin: string;
+    merchantSecret: string;
+};

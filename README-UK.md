@@ -34,9 +34,9 @@
 
 Після авторизації, у боковому меню перейдіть до розділу `Налаштування магазину`. Ви побачите список ваших магазинів. Якщо магазину ще немає, натисніть `Створити магазин`. Не забудьте вказати домен магазину. Якщо ви ще не визначились з доменом, введіть тимчасовий.
 
-### 🔑 Environment Variables
+### 🔑 Token
 
-Після створення магазину перейдіть до його налаштувань. Там знайдіть картку з `Реквізитами мерчанта`, де ви знайдете `Merchant login` та `Merchant secret key`. Ці дані потрібно додати до файлу `.env` у кореневій директорії вашого проекту.
+Після створення магазину перейдіть до його налаштувань. Там знайдіть картку з `Реквізитами мерчанта`, де ви знайдете `Merchant login` та `Merchant secret key`. Ці дані потрібно вказати в опціях класу `Wayforpay` або додати до файлу `.env` у кореневій директорії вашого проекту.
 
 - `DOMAIN` — домен вашого Wayforpay магазину
 - `CURRENCY` — валюта, що використовується у вашому магазині
@@ -44,7 +44,7 @@
 - `MERCHANT_SECRET_KEY` — секретний ключ мерчанта з налаштувань магазину
 
 > [!CAUTION]
-> **Не використовуйте** методи `createForm` та `createSignature` на клієнтській стороні. Це може скомпрометувати ваш секретний ключ. Використовуйте ці методи лише на сервері (наприклад, у вашому API).
+> **Не використовуйте** методи цього пакету на клієнтській стороні. Це може скомпрометувати ваш секретний ключ. Використовуйте функціонал лише на сервері (наприклад, у вашому API).
 
 [Приклад файлу .env](https://github.com/Wlad1slav/wayforpay-ts-integration/blob/main/packages/backend/.env.example)
 
@@ -67,7 +67,7 @@ npm i wayforpay-ts-integration
 import express, {Request, Response} from 'express';
 import dotenv from 'dotenv';
 
-import {TCartElement, TProduct, TUserCartElement} from "wayforpay-ts-integration";
+import {Wayforpay, TCartElement, TProduct, TUserCartElement} from "wayforpay-ts-integration";
 import createForm from "wayforpay-ts-integration/dist/utils/createForm";
 
 dotenv.config();
@@ -104,9 +104,16 @@ app.post('/api/wayforpay/checkout', async (req: Request, res: Response) => {
             }
         }).filter(Boolean);  // Filter out null values from the array
 
+        const wayforpay = new Wayforpay({
+            merchantLogin: process.env.MERCHANT_LOGIN as string,
+            merchantSecret: process.env.MERCHANT_SECRET_KEY as string,
+            currency: process.env.CURRENCY as string,
+            domain: process.env.DOMAIN as string,
+        });
+
         // Creates a form for a request to wayforpay
-        const form = await createForm(cart as TCartElement[], {
-            deliveryList: "nova;ukrpost;other"
+        const form = await wayforpay.createForm(cart as TCartElement[], {
+            deliveryList: "nova;other"
         });
 
         return res.send(form);
@@ -123,7 +130,7 @@ app.listen(port, () => {
 ##### Next.js приклад (з app router)
 ```typescript
 import createForm from "wayforpay-ts-integration/dist/utils/createForm";
-import {TCartElement, TUserCartElement} from "wayforpay-ts-integration";
+import {TCartElement, TUserCartElement, Wayforpay} from "wayforpay-ts-integration";
 import {Product} from "@/lib/services/woocommerce-api";
 
 export async function POST(request: Request) {
@@ -133,7 +140,14 @@ export async function POST(request: Request) {
 
     const cart = await Product.generateCart(userCart);
 
-    const form = await createForm(cart as TCartElement[], {
+    const wayforpay = new Wayforpay({
+        merchantLogin: process.env.MERCHANT_LOGIN as string,
+        merchantSecret: process.env.MERCHANT_SECRET_KEY as string,
+        currency: process.env.CURRENCY as string,
+        domain: process.env.DOMAIN as string,
+    });
+    
+    const form = await wayforpay.createForm(cart as TCartElement[], {
         deliveryList: "nova;ukrpost;other"
     });
 
@@ -145,14 +159,23 @@ export async function POST(request: Request) {
 }
 ```
 
-Функція `createForm` створює форму для оплати. Другий параметр — це об'єкт з конфігурацією, в яку можна передати будь-яке поле, [що підтримується Wayforpay](https://wiki.wayforpay.com/view/852102).
+В клас `Wayforpay` ви вказуєте дані вашого мерчанту.
+
+Метод `createForm` створює форму для оплати. Другий параметр — це об'єкт з конфігурацією, в яку можна передати будь-яке поле, [що підтримується Wayforpay](https://wiki.wayforpay.com/view/852102).
 
 ```typescript
+import {Wayforpay} from "wayforpay-ts-integration";
+
+const wayforpay = new Wayforpay({
+    merchantLogin: process.env.MERCHANT_LOGIN as string,
+    merchantSecret: process.env.MERCHANT_SECRET_KEY as string,
+    currency: process.env.CURRENCY as string,
+    domain: process.env.DOMAIN as string,
+});
+
 const form = await createForm(cart as TCartElement[], {
   deliveryList: "nova;ukrpost;other"
 });
-
-return res.send(form);
 ```
 
 #### 📤 Виконання форми

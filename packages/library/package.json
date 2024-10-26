@@ -1,6 +1,6 @@
 {
   "name": "wayforpay-ts-integration",
-  "version": "0.0.8",
+  "version": "0.1.1",
   "description": "Library for forms to go to the Wayforpay payment page.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -9,7 +9,8 @@
     "package.json"
   ],
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "update": "npm run build && npm version patch && npm publish"
   },
   "author": "Vladyslav Fokin <vlad.fokin2004.vf@gmail.com> (https://github.com/Wlad1slav)",
   "license": "ISC",
