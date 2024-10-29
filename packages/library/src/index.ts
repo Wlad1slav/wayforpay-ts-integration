@@ -1,7 +1,6 @@
-import {TCartElement, TWayforpayOptions} from "./types";
+import {TCartElement, TRequestPayment, TWayforpayAvailableCurrency, TWayforpayOptions} from "./types";
 import {envSpecifiedError} from "./messages";
 import crypto from "crypto";
-import {CheckWindow} from "./utils/checkWindow";
 
 export * from './utils/createSignature';
 export * from './utils/createForm';
@@ -13,7 +12,6 @@ export class Wayforpay {
      *
      * If options are not passed, then variables from the .env file are used.
      * - `DOMAIN` — the domain of your Wayforpay store
-     * - `CURRENCY` — the currency used in your store
      * - `MERCHANT_LOGIN` — the merchant login from the store settings
      * - `MERCHANT_SECRET_KEY` — the merchant secret key from the store settings
      */
@@ -22,23 +20,23 @@ export class Wayforpay {
             const {
                 DOMAIN: domain,
                 MERCHANT_LOGIN: merchantLogin,
-                CURRENCY: currency,
                 MERCHANT_SECRET_KEY: merchantSecret
             } = process.env;
-            if (!domain || !merchantLogin || !currency || !merchantSecret)
+            if (!domain || !merchantLogin || !merchantSecret)
                 throw new Error(envSpecifiedError);
-            this.option = {domain, currency, merchantLogin, merchantSecret};
+            this.option = {domain, merchantLogin, merchantSecret};
         }
     }
 
-    private createSignature({orderDate, totalPrice, pricesString, quantitiesString, namesString}: {
+    private createSignature({orderDate, totalPrice, pricesString, quantitiesString, namesString, currency}: {
         orderDate: number;
         totalPrice: number;
         namesString: string;
         quantitiesString: string;
         pricesString: string;
+        currency: TWayforpayAvailableCurrency;
     }) {
-        const signature = `${this.option?.merchantLogin};${this.option?.domain};${orderDate};${orderDate};${totalPrice};${this.option?.currency};${namesString};${quantitiesString};${pricesString}`;
+        const signature = `${this.option?.merchantLogin};${this.option?.domain};${orderDate};${orderDate};${totalPrice};${currency};${namesString};${quantitiesString};${pricesString}`;
         return (
             crypto.createHmac('md5', this.option?.merchantSecret as string)
                 .update(signature)
@@ -49,8 +47,9 @@ export class Wayforpay {
     private arrayToHtmlArray = (name: string, array: (string | number)[]) =>
         array.map(element => `<input type="hidden" name="${name}[]" value="${element}" />`).join('\n');
 
-    @CheckWindow
-    public async createForm(cart: TCartElement[], data: Record<string, string> = {}) {
+    public async createForm(cart: TCartElement[], data: TRequestPayment = {
+        currency: 'UAH'
+    }) {
         const orderDate = Date.now();
 
         // Extract product names, quantities, and prices from the cart
@@ -62,16 +61,21 @@ export class Wayforpay {
 
         // Create a signature to securely verify the transaction
         const signature = this.createSignature({
+            // merchantLogin: this.option?.merchantLogin as string,
+            // domain: this.option?.domain as string,
+            orderDate,
+            // invoice: orderDate.toString(),
             totalPrice,
+            currency: data.currency,
             pricesString: prices.join(';'),
             namesString: names.join(';'),
             quantitiesString: quantities.join(';'),
-            orderDate
         });
 
         // Map additional data fields (if provided) into hidden input fields
         const additionalFields = Object.entries(data)
-            .map(([key, value]) => `<input type="hidden" name="${key}" value="${value}" />`)
+            .map(([key, value]) =>
+                `<input type="hidden" name="${key}" value="${Array.isArray(value) ? value.join(';') : value}" />`)
             .join('\n');
 
         return `
@@ -83,7 +87,7 @@ export class Wayforpay {
               <input type="hidden" name="orderReference" value="${orderDate}" />
               <input type="hidden" name="orderDate" value="${orderDate}" />
               <input type="hidden" name="amount" value="${totalPrice}" />
-              <input type="hidden" name="currency" value="${this.option?.currency}" />
+              <input type="hidden" name="currency" value="${data.currency}" />
               
               <!-- Dynamic fields for products: Names, Prices, Quantities -->
               ${this.arrayToHtmlArray('productName', names)}

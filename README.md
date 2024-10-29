@@ -12,6 +12,8 @@
 - [X] Generation of a form for redirecting to the payment page with the ability to automatically execute it on the client
 - [X] Signature generation for secure transaction verification
 - [X] Prohibition of unsafe functions on the client side
+- [ ] Getting a list of transactions
+- [ ] Regular payments
 - [ ] Order status tracking
 - [ ] Ability to cancel an order
 
@@ -39,7 +41,6 @@ After authorization, go to the `Store settings` section in the side menu. You wi
 After creating the store, go to its settings. There, find the `Merchant details` card, where you will see `Merchant login` and `Merchant secret key`. These details need to be specified in the Wayforpay class options or added to the `.env` file in the root directory of your project.
 
 - `DOMAIN` — the domain of your Wayforpay store
-- `CURRENCY` — the currency used in your store
 - `MERCHANT_LOGIN` — the merchant login from the store settings
 - `MERCHANT_SECRET_KEY` — the merchant secret key from the store settings
 
@@ -110,13 +111,13 @@ app.post('/api/wayforpay/checkout', async (req: Request, res: Response) => {
       const wayforpay = new Wayforpay({
         merchantLogin: process.env.MERCHANT_LOGIN as string,
         merchantSecret: process.env.MERCHANT_SECRET_KEY as string,
-        currency: process.env.CURRENCY as string,
         domain: process.env.DOMAIN as string,
       });
 
       // Creates a form for a request to wayforpay
       const form = await wayforpay.createForm(cart as TCartElement[], {
-        deliveryList: "nova;other"
+        currency: 'UAH',
+        deliveryList: ["nova","other"],
       });
 
         return res.send(form);
@@ -149,13 +150,13 @@ export async function POST(request: Request) {
   const wayforpay = new Wayforpay({
     merchantLogin: process.env.MERCHANT_LOGIN as string,
     merchantSecret: process.env.MERCHANT_SECRET_KEY as string,
-    currency: process.env.CURRENCY as string,
     domain: process.env.DOMAIN as string,
   });
 
   // Creates a form for a request to wayforpay
   const form = await wayforpay.createForm(cart as TCartElement[], {
-    deliveryList: "nova;other"
+    currency: 'UAH',
+    deliveryList: ["nova","other"],
   });
 
     return new Response(form, {
@@ -176,13 +177,13 @@ import {Wayforpay} from "wayforpay-ts-integration";
 const wayforpay = new Wayforpay({
   merchantLogin: process.env.MERCHANT_LOGIN as string,
   merchantSecret: process.env.MERCHANT_SECRET_KEY as string,
-  currency: process.env.CURRENCY as string,
   domain: process.env.DOMAIN as string,
 });
 
 // Creates a form for a request to wayforpay
 const form = await wayforpay.createForm(cart as TCartElement[], {
-  deliveryList: "nova;other"
+  currency: 'UAH',
+  deliveryList: ["nova", "other"],
 });
 ```
 

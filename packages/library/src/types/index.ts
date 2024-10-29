@@ -1,3 +1,5 @@
+export * from './requests';
+
 export type TCartElement = {
     quantity: number;
     product: {
@@ -19,7 +21,20 @@ export type TProduct = {
 
 export type TWayforpayOptions = {
     domain: string;
-    currency: string;
     merchantLogin: string;
     merchantSecret: string;
 };
+
+export type TSignaturePayment = {
+    merchantLogin: string;
+    domain: string;
+    orderDate: number;
+    invoice: string;
+    totalPrice: number;
+    currency: string;
+    namesString: string;
+    quantitiesString: string;
+    pricesString: string;
+}
+
+

@@ -12,6 +12,8 @@
 - [X] Генерація форми для редіректу на сторінку оплати з можливістю автоматичного виконання на клієнті
 - [X] Генерація підпису для безпечної перевірки транзакції
 - [X] Заборона виконання небезпечних функцій на клієнтському боці
+- [ ] Отримання списку транзакцій
+- [ ] Регулярні платежі
 - [ ] Відстеження статусу замовлення
 - [ ] Можливість скасування замовлення
 
@@ -39,7 +41,6 @@
 Після створення магазину перейдіть до його налаштувань. Там знайдіть картку з `Реквізитами мерчанта`, де ви знайдете `Merchant login` та `Merchant secret key`. Ці дані потрібно вказати в опціях класу `Wayforpay` або додати до файлу `.env` у кореневій директорії вашого проекту.
 
 - `DOMAIN` — домен вашого Wayforpay магазину
-- `CURRENCY` — валюта, що використовується у вашому магазині
 - `MERCHANT_LOGIN` — логін мерчанта з налаштувань магазину
 - `MERCHANT_SECRET_KEY` — секретний ключ мерчанта з налаштувань магазину
 
@@ -113,7 +114,8 @@ app.post('/api/wayforpay/checkout', async (req: Request, res: Response) => {
 
         // Creates a form for a request to wayforpay
         const form = await wayforpay.createForm(cart as TCartElement[], {
-            deliveryList: "nova;other"
+            currency: 'UAH',
+            deliveryList: ["nova","other"],
         });
 
         return res.send(form);
@@ -146,9 +148,10 @@ export async function POST(request: Request) {
         currency: process.env.CURRENCY as string,
         domain: process.env.DOMAIN as string,
     });
-    
+
     const form = await wayforpay.createForm(cart as TCartElement[], {
-        deliveryList: "nova;ukrpost;other"
+        currency: 'UAH',
+        deliveryList: ["nova","other"],
     });
 
     return new Response(form, {
@@ -173,8 +176,9 @@ const wayforpay = new Wayforpay({
     domain: process.env.DOMAIN as string,
 });
 
-const form = await createForm(cart as TCartElement[], {
-  deliveryList: "nova;ukrpost;other"
+const form = await wayforpay.createForm(cart as TCartElement[], {
+    currency: 'UAH',
+    deliveryList: ["nova","other"],
 });
 ```
 
