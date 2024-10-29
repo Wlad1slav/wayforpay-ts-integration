@@ -57,3 +57,10 @@ export type TRequestPayment = {
     paymentSystems?: TWayforpayAvailablePaymentMethods[]; // Доступні платіжні системи
     defaultPaymentSystem?: TWayforpayAvailablePaymentMethods; // Платіжна система за замовчуванням
 };
+
+export type TRequestListTransactions = {
+    transactionType: 'TRANSACTION_LIST',
+    apiVersion: 1 | 2; // Значення 2 - надає передачу розширених даних у вiдповiдi - додатковi поля, доставка, коментарі.
+    dateBegin?: Date;
+    dateEnd?: Date;
+};

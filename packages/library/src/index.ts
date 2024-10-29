@@ -1,6 +1,14 @@
-import {TCartElement, TRequestPayment, TSignaturePayment, TWayforpayOptions} from "./types";
+import {
+    TCartElement,
+    TRequestListTransactions,
+    TRequestPayment,
+    TSignatureListTransactions,
+    TSignaturePayment,
+    TWayforpayOptions
+} from "./types";
 import {envSpecifiedError} from "./messages";
 import crypto from "crypto";
+import axios from "axios";
 
 export * from './utils/createSignature';
 export * from './utils/createForm';
@@ -39,6 +47,11 @@ export class Wayforpay {
 
     // {merchantLogin, domain, orderDate, totalPrice, currency, namesString, quantitiesString, pricesString}
     private createPaymentSignature(params: TSignaturePayment) {
+        const stringifyParams = Object.values(params).map(param => param.toString());
+        return this.createSignature(stringifyParams);
+    }
+
+    private createListTransactionsSignature(params: TSignatureListTransactions) {
         const stringifyParams = Object.values(params).map(param => param.toString());
         return this.createSignature(stringifyParams);
     }
@@ -97,5 +110,27 @@ export class Wayforpay {
               ${additionalFields}
             </form>
         `;
+    }
+    public async getTransactions(data: TRequestListTransactions = {
+        apiVersion: 2,
+        transactionType: 'TRANSACTION_LIST',
+    }) {
+        // If no date is specified, the period is set to the last 30 days
+        const date = {
+            dateBegin: Math.floor(data.dateBegin?.getTime() ?? new Date(new Date().getTime() - 30 * 24 * 60 * 60 * 1000).getTime() / 1000),
+            dateEnd: Math.floor(data.dateEnd?.getDate() ?? new Date().getTime() / 1000),
+        };
+
+        const preparedData = {
+            ...data,
+            ...date,
+            merchantAccount: this.option?.merchantLogin as string,
+            merchantSignature: this.createListTransactionsSignature({
+                merchantAccount: this.option?.merchantLogin as string,
+                ...date
+            })
+        };
+
+        return await axios.post('https://api.wayforpay.com/api', preparedData);
     }
 }
