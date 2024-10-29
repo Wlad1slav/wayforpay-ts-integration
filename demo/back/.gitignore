@@ -1,5 +1,5 @@
 # IDE configs
-.idea
+../../packages/backend/.idea
 
 # Enviroment
 node_modules

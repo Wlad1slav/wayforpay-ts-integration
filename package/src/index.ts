@@ -10,8 +10,6 @@ import {envSpecifiedError} from "./messages";
 import crypto from "crypto";
 import axios from "axios";
 
-export * from './utils/createSignature';
-export * from './utils/createForm';
 export * from './types';
 
 export class Wayforpay {
@@ -59,6 +57,35 @@ export class Wayforpay {
     private arrayToHtmlArray = (name: string, array: (string | number)[]) =>
         array.map(element => `<input type="hidden" name="${name}[]" value="${element}" />`).join('\n');
 
+    /**
+     * ## The Purchase request
+     * The Purchase request is used to make a payment by the client on the secure wayforpay page.
+     *
+     * A request with the necessary parameters is formed through a package
+     * and transmitted in the form of an HTML form, which should be executed
+     * automatically on the front-end side.
+     *
+     * ### Documentation
+     * - https://wiki.wayforpay.com/view/852102
+     *
+     * ### Example
+     * ```typescript
+     * const wayforpay = new Wayforpay({
+     *     merchantLogin: process.env.MERCHANT_LOGIN as string,
+     *     merchantSecret: process.env.MERCHANT_SECRET_KEY as string,
+     *     domain: process.env.DOMAIN as string,
+     * });
+     *
+     * // In `form` HTML is a form that should be sent to the front end and executed.
+     * const form = await wayforpay.createForm(cart as TCartElement[], {
+     *     currency: 'UAH',
+     *     deliveryList: ["nova","other"],
+     * });
+     * ```
+     *
+     * @param cart
+     * @param data
+     */
     public async createForm(cart: TCartElement[], data: TRequestPayment = {
         currency: 'UAH'
     }) {
@@ -111,6 +138,30 @@ export class Wayforpay {
             </form>
         `;
     }
+
+    /**
+     * ## Transaction list
+     * The TRANSACTION LIST query is used to retrieve a list of store transactions for a specific time period.
+     *
+     * The maximum period for which you can receive transactions is 31 days.
+     *
+     * ### Documentation
+     * - https://wiki.wayforpay.com/view/1736786
+     *
+     * ### Example
+     * ```typescript
+     * const wayforpay = new Wayforpay({
+     *     merchantLogin: process.env.MERCHANT_LOGIN as string,
+     *     merchantSecret: process.env.MERCHANT_SECRET_KEY as string,
+     *     domain: process.env.DOMAIN as string,
+     * });
+     *
+     * const response = await wayforpay.getTransactions();
+     * const transactions = response.data;
+     * ```
+     *
+     * @param data
+     */
     public async getTransactions(data: TRequestListTransactions = {
         apiVersion: 2,
         transactionType: 'TRANSACTION_LIST',

@@ -2,15 +2,15 @@ import express, {Request, Response} from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 
-import {
-    TCartElement,
-    TProduct,
-    TUserCartElement,
-    Wayforpay
-} from "wayforpay-ts-integration-test";
+// import {
+//     TCartElement,
+//     TProduct,
+//     TUserCartElement,
+//     Wayforpay
+// } from "wayforpay-ts-integration-test";
 
-// import {TCartElement, TProduct, TUserCartElement} from "../dev/utils/types";
-// import {Wayforpay} from "../dev";
+import {TCartElement, TProduct, TUserCartElement} from "../dev/utils/types";
+import {Wayforpay} from "../dev";
 
 dotenv.config();
 
@@ -50,19 +50,35 @@ app.post('/api/wayforpay/checkout', async (req: Request, res: Response) => {
         const wayforpay = new Wayforpay({
             merchantLogin: process.env.MERCHANT_LOGIN as string,
             merchantSecret: process.env.MERCHANT_SECRET_KEY as string,
-            currency: process.env.CURRENCY as string,
             domain: process.env.DOMAIN as string,
-        })
+        });
 
         // Creates a form for a request to wayforpay
         const form = await wayforpay.createForm(cart as TCartElement[], {
-            deliveryList: "nova;other"
+            currency: 'UAH',
+            deliveryList: ["nova","other"],
         });
 
         return res.send(form);
     } else {
         console.error('No product IDs were specified');
     }
+});
+
+app.post('/api/wayforpay/transactions', async (req: Request, res: Response) => {
+    const dateBegin = Math.floor(new Date('2023-10-29').getTime() / 1000);
+    const dateEnd = Math.floor(Date.now() / 1000);
+    console.log({dateBegin, dateEnd});
+
+
+    const wayforpay = new Wayforpay({
+        merchantLogin: process.env.MERCHANT_LOGIN as string,
+        merchantSecret: process.env.MERCHANT_SECRET_KEY as string,
+        domain: process.env.DOMAIN as string,
+    });
+
+    const transactions = await wayforpay.getTransactions();
+    return res.json(transactions.data);
 });
 
 app.listen(port, () => {
