@@ -1,4 +1,4 @@
-import {TCartElement, TRequestPayment, TWayforpayAvailableCurrency, TWayforpayOptions} from "./types";
+import {TCartElement, TRequestPayment, TSignaturePayment, TWayforpayOptions} from "./types";
 import {envSpecifiedError} from "./messages";
 import crypto from "crypto";
 
@@ -28,20 +28,19 @@ export class Wayforpay {
         }
     }
 
-    private createSignature({orderDate, totalPrice, pricesString, quantitiesString, namesString, currency}: {
-        orderDate: number;
-        totalPrice: number;
-        namesString: string;
-        quantitiesString: string;
-        pricesString: string;
-        currency: TWayforpayAvailableCurrency;
-    }) {
-        const signature = `${this.option?.merchantLogin};${this.option?.domain};${orderDate};${orderDate};${totalPrice};${currency};${namesString};${quantitiesString};${pricesString}`;
+    private createSignature(params: string[]) {
+        const signature = params.join(';');
         return (
             crypto.createHmac('md5', this.option?.merchantSecret as string)
                 .update(signature)
                 .digest('hex')
         );
+    }
+
+    // {merchantLogin, domain, orderDate, totalPrice, currency, namesString, quantitiesString, pricesString}
+    private createPaymentSignature(params: TSignaturePayment) {
+        const stringifyParams = Object.values(params).map(param => param.toString());
+        return this.createSignature(stringifyParams);
     }
 
     private arrayToHtmlArray = (name: string, array: (string | number)[]) =>
@@ -60,16 +59,16 @@ export class Wayforpay {
         let totalPrice = prices.reduce((acc, price, i) => acc + price * quantities[i], 0);
 
         // Create a signature to securely verify the transaction
-        const signature = this.createSignature({
-            // merchantLogin: this.option?.merchantLogin as string,
-            // domain: this.option?.domain as string,
+        const signature = this.createPaymentSignature({
+            merchantLogin: this.option?.merchantLogin as string,
+            domain: this.option?.domain as string,
             orderDate,
-            // invoice: orderDate.toString(),
+            invoice: orderDate.toString(),
             totalPrice,
             currency: data.currency,
-            pricesString: prices.join(';'),
             namesString: names.join(';'),
             quantitiesString: quantities.join(';'),
+            pricesString: prices.join(';'),
         });
 
         // Map additional data fields (if provided) into hidden input fields
