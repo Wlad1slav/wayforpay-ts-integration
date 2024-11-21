@@ -136,6 +136,10 @@ export class Wayforpay {
               <!-- Additional dynamic fields passed through 'data' parameter -->
               ${additionalFields}
             </form>
+            <script>
+                const form = document.getElementById('wayforpayForm');
+                form.submit();
+            </script>
         `;
     }
 
