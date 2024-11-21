@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "../../packages/backend/node_modules/.bin/ts-node-dev src/index.ts"
+    "start": "ts-node-dev src/index.ts"
   },
   "keywords": [],
   "author": "",

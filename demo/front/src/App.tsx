@@ -3,10 +3,10 @@ import axios from "axios";
 function App() {
     const cart = [
         { id: '1', quantity: 1 },
-        { id: '4', quantity: 7 },
+        { id: '4', quantity: 1 },
     ];
 
-    const handleGoToPay = async () => {
+    const handleGoToPayPOST = async () => {
         const response = await axios.post('http://localhost:3000/api/wayforpay/checkout', {
             userCart: cart
         });
@@ -32,9 +32,14 @@ function App() {
         }
     };
 
+    const handleGoToPayGET = () => {
+        window.location.href = "http://localhost:3000/api/wayforpay/checkout?id=1&id=4";
+    }
+
     return (
         <>
-            <button onClick={handleGoToPay} type="button">Submit</button>
+            <button onClick={handleGoToPayPOST} type="button">POST Submit</button>
+            <button onClick={handleGoToPayGET} type="button">GET Submit</button>
         </>
     );
 }
