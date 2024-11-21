@@ -15,6 +15,7 @@ npm i wayforpay-ts-integration
 ## ✨ Features
 
 - [X] Payments
+- [X] Creating a link to the checkout page
 - [ ] One-Click Payment
 - [ ] Payment Widget
 - [ ] Card Verification (Verify)
@@ -85,7 +86,7 @@ Here’s what you need to know:
 1. The user sends a request to the server.
 2. The server uses our package to generate an HTML form based on the client’s cart.
 3. The generated form, with a unique signature, is sent back to the user.
-4. On the client side, you automatically execute the form for the user.
+4. You automatically execute the form for the user on the client side OR redirect the user to a page with this form and a script for its execution.
 5. After the form is submitted, the user is redirected to the Wayforpay page for order payment.
 
 In the `Wayforpay` class, you specify your merchant’s data. The `createForm` method generates an HTML form for payment, which should be automatically executed on the client side for the user.
@@ -118,7 +119,7 @@ const form = await wayforpay.createForm(cart as TCartElement[], {
 #### Additional documentation
 - https://wiki.wayforpay.com/view/852102
 
-#### Express.js example
+#### POST example
 
 ```typescript
 import {Wayforpay, TCartElement, TProduct, TUserCartElement} from "wayforpay-ts-integration";
@@ -169,41 +170,6 @@ app.post('/api/wayforpay/checkout', async (req: Request, res: Response) => {
 });
 ```
 
-#### Next.js example (with app router)
-
-```typescript
-import { TCartElement, TUserCartElement } from "wayforpay-ts-integration";
-import {Product} from "@/lib/services/woocommerce-api";
-
-export async function POST(request: Request) {
-    const {cart: userCart}: {
-        cart: TUserCartElement[];
-    } = await request.json();
-
-    const cart = await Product.generateCart(userCart);
-
-    const wayforpay = new Wayforpay({
-        merchantLogin: process.env.MERCHANT_LOGIN as string,
-        merchantSecret: process.env.MERCHANT_SECRET_KEY as string,
-        domain: process.env.DOMAIN as string,
-    });
-
-    // Creates a form for a request to wayforpay
-    const form = await wayforpay.createForm(cart as TCartElement[], {
-        currency: 'UAH',
-        deliveryList: ["nova", "other"],
-    });
-
-    return new Response(form, {
-        headers: {
-            'Content-Type': 'text/html',
-        },
-    });
-}
-```
-
-#### 📤 Form execution
-
 On the client side, the form needs to be inserted into the DOM and automatically executed. Here is an example of a React
 component that redirects the client to the payment page upon clicking a button:
 
@@ -247,6 +213,63 @@ function GoToPaymentButton() {
 }
 ```
 
+#### GET example
+
+If you want to avoid unnecessary POST requests, you can redirect the user to a page with this form. The package automatically adds a script to the form to handle its submission, so all you need to do is create a GET API route that generates the form based on the parameters specified in the URL and redirect the user to this route.
+
+```typescript
+import {NextRequest, NextResponse} from "next/server";
+import {TCartElement, TRequestPayment, TWayforpayAvailableCurrency, Wayforpay} from "wayforpay-ts-integration";
+import {decrypt} from "@/lib/secret";
+import { hookMerchant } from "@/lib/api-hooks";
+
+export async function GET(request: NextRequest) {
+    const merchant = await hookMerchant('Wayforpay');
+    if (!merchant)
+        return NextResponse.json({message: 'This merchant does not exist'}, {status: 400});
+
+    const merchantData = merchant.data as {
+        merchantLogin: string;
+        domain: string;
+    };
+
+    const options = await hookOptions('Wayforpay');
+
+    let optionsData: {
+        currency: TWayforpayAvailableCurrency,
+        [key: string]: string
+    } = { currency: 'USD' };
+
+    for (const option of options) {
+        optionsData[option.key] = option.value;
+    }
+
+    const wfp = new Wayforpay({
+        merchantLogin: merchantData.merchantLogin,
+        merchantSecret: decrypt(merchant.secret),
+        domain: merchantData.domain,
+    });
+
+    const {searchParams} = new URL(request.url);
+    const productId = searchParams.get('id');
+
+    if (!productId)
+        return NextResponse.json({message: 'No required parameters found'}, {status: 400});
+
+    const product = await hookProduct(productId);
+
+    const cart: TCartElement[] = [product];
+
+    const form = await wfp.createForm(cart, optionsData as TRequestPayment);
+
+    return new Response(form, {
+        headers: { 'Content-Type': 'text/html' }
+    });
+}
+```
+
+Next, it's enough to simply redirect the user to this API. For example: `window.location.href = 'https://example.com/api/public/v1/wayforpay?id=12';`.
+
 ### 📋 Retrieving the List of Transactions
 
 A transaction list request is used to obtain a list of store transactions for a specific period.
@@ -265,6 +288,40 @@ const wayforpay = new Wayforpay({
 
 const response = await wayforpay.getTransactions();
 const transactions = response.data;
+```
+
+## Contributing
+
+Contributions from everyone are welcome.
+
+### Instructions
+
+Fork the repository
+
+Clone the repository
+
+```bash
+git clone https://github.com/Wlad1slav/wayforpay-ts-integration.git
+```
+
+Create a new branch
+
+```bash
+git checkout -b feature/feature-name
+```
+
+Make your changes
+
+Commit your changes
+
+```bash
+git commit -m "feat: description of your feature"
+```
+
+Push your changes
+
+```bash
+git push origin feature/feature-name
 ```
 
 ## Author

@@ -14,6 +14,7 @@ npm i wayforpay-ts-integration
 ## ✨ Features
 
 - [X] Платежі
+- [Х] Створення посилання на сторінку оплати
 - [ ] Оплата в один клік
 - [ ] Платіжний віджет
 - [ ] Верифікація картки (Verify)
@@ -79,14 +80,14 @@ npm i wayforpay-ts-integration
 
 Для створення платежів, Wayforpay приймає тільки прості HTTP запити з методом POST та унікальним підписом всередині. Те,
 як створюється підпис та яка сама необхідна форма вам знати немає потреби, бо це все включено в функціонал цього пакету.
+
 Все що вам варто знати:
 
 1. користувач робить запит на сервер,
 2. на сервері через наш пакет генерується HTML форма на основі кошика клієнта,
 3. згенерована форма з унікальним підписом відправляється назад користувачу,
-4. ви на клієнтській частині автоматично виконуєте форму для користувача,
-5. після виконання переданої форми відбувається перенаправлення на сторінку Wayforpay, де проходить оплата за
-   замовлення.
+4. ви на клієнтській частині автоматично виконуєте форму для користувача АБО перенаправляєте користувача на сторінку з цією формою та скриптом для її виконання,
+5. після виконання переданої форми відбувається перенаправлення на сторінку Wayforpay, де проходить оплата за замовлення.
 
 В клас `Wayforpay` ви вказуєте дані вашого мерчанта. Метод `createForm` створює HTML-форму для оплати, яку вам треба
 автоматично виконувати на клієнтській частині для користувача.
@@ -120,7 +121,7 @@ const form = await wayforpay.createForm(cart as TCartElement[], {
 #### Додаткова документація
 - https://wiki.wayforpay.com/view/852102
 
-#### Express.js приклад
+#### POST приклад
 
 ```typescript
 import {Wayforpay, TCartElement, TProduct, TUserCartElement} from "wayforpay-ts-integration";
@@ -171,38 +172,6 @@ app.post('/api/wayforpay/checkout', async (req: Request, res: Response) => {
 });
 ```
 
-#### Next.js приклад (з app router)
-
-```typescript
-import {TCartElement, TUserCartElement, Wayforpay} from "wayforpay-ts-integration";
-import {Product} from "@/lib/services/woocommerce-api";
-
-export async function POST(request: Request) {
-    const {cart: userCart}: {
-        cart: TUserCartElement[];
-    } = await request.json();
-
-    const cart = await Product.generateCart(userCart);
-
-    const wayforpay = new Wayforpay({
-        merchantLogin: process.env.MERCHANT_LOGIN as string,
-        merchantSecret: process.env.MERCHANT_SECRET_KEY as string,
-        domain: process.env.DOMAIN as string,
-    });
-
-    const form = await wayforpay.createForm(cart as TCartElement[], {
-        currency: 'UAH',
-        deliveryList: ["nova", "other"],
-    });
-
-    return new Response(form, {
-        headers: { 'Content-Type': 'text/html' },
-    });
-}
-```
-
-#### 📤 Виконання форми
-
 На клієнтській стороні форму необхідно вставити в DOM і автоматично виконати. Ось приклад React-компонента, який
 перекидає клієнта на сторінку оплати при натисненні кнопки:
 
@@ -246,6 +215,65 @@ function GoToPaymentButton() {
 }
 ```
 
+#### GET приклад
+
+Якщо ви хочете уникати зайвих POST запитів, то ви можете зробити редірект користувача на сторінку з цією формою. Пакет вже автоматично додає в форму скрипт для її виконання, тому все що вам потрібно зробити - створити GET АПІ маршрут по якому на основі заданих в посилання параметрів буде генеруватися форма та перенаправити користувача на цей маршрут. 
+
+##### Next.js 14 з app router
+```typescript
+import {NextRequest, NextResponse} from "next/server";
+import {TCartElement, TRequestPayment, TWayforpayAvailableCurrency, Wayforpay} from "wayforpay-ts-integration";
+import {decrypt} from "@/lib/secret";
+import { hookMerchant } from "@/lib/api-hooks";
+
+export async function GET(request: NextRequest) {
+    const merchant = await hookMerchant('Wayforpay');
+    if (!merchant)
+        return NextResponse.json({message: 'This merchant does not exist'}, {status: 400});
+
+    const merchantData = merchant.data as {
+        merchantLogin: string;
+        domain: string;
+    };
+
+    const options = await hookOptions('Wayforpay');
+
+    let optionsData: {
+        currency: TWayforpayAvailableCurrency,
+        [key: string]: string
+    } = { currency: 'USD' };
+
+    for (const option of options) {
+        optionsData[option.key] = option.value;
+    }
+
+    const wfp = new Wayforpay({
+        merchantLogin: merchantData.merchantLogin,
+        merchantSecret: decrypt(merchant.secret),
+        domain: merchantData.domain,
+    });
+
+    const {searchParams} = new URL(request.url);
+    const productId = searchParams.get('id');
+
+    if (!productId)
+        return NextResponse.json({message: 'No required parameters found'}, {status: 400});
+
+    const product = await hookProduct(productId);
+
+    const cart: TCartElement[] = [product];
+
+    const form = await wfp.createForm(cart, optionsData as TRequestPayment);
+
+    return new Response(form, {
+        headers: { 'Content-Type': 'text/html' }
+    });
+}
+```
+
+Далі вистачить просто перенаправити користувача на цей АПІ. Наприклад `window.location.href = 'https://example.com/api/public/v1/wayforpay?id=12';`.
+
+
 ### 📋 Отримання списку транзакцій
 Запит на перелік транзакцій використовується для отримання списку транзакцій магазину за певний період часу.
 
@@ -265,10 +293,44 @@ const response = await wayforpay.getTransactions();
 const transactions = response.data;
 ```
 
-## Author
+## Контриб'ютинг
+
+Вітаю внесок від усіх. 
+
+### Інструкція
+
+Зробіть форк репозиторію
+
+Клонуйте репозиторій
+
+```bash
+git clone https://github.com/Wlad1slav/wayforpay-ts-integration.git
+```
+
+Створіть нову гілку
+
+```bash
+git checkout -b feature/назва-функції
+```
+
+Внесіть зміни
+
+Закомітьте зміни
+
+```bash
+git commit -m "feat: опис вашої функції"
+```
+
+Запуште зміни
+
+```bash
+git push origin feature/назва-функції
+```
+
+## Автор
 
 [@Wlad1slav](https://github.com/Wlad1slav)
 
-## License
+## Ліцензія
 
 ISC
