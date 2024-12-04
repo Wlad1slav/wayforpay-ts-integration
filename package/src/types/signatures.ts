@@ -1,5 +1,3 @@
-import {TRequestListTransactions} from "./requests";
-
 export type TSignaturePayment = {
     merchantLogin: string;
     domain: string;
