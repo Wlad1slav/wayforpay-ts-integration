@@ -6,7 +6,7 @@ import {
     TSignaturePayment,
     TWayforpayOptions
 } from "./types";
-import {envSpecifiedError} from "./messages";
+import { envSpecifiedError } from "./messages";
 import crypto from "crypto";
 import axios from "axios";
 
@@ -30,7 +30,7 @@ export class Wayforpay {
             } = process.env;
             if (!domain || !merchantLogin || !merchantSecret)
                 throw new Error(envSpecifiedError);
-            this.option = {domain, merchantLogin, merchantSecret};
+            this.option = { domain, merchantLogin, merchantSecret };
         }
     }
 
@@ -98,12 +98,15 @@ export class Wayforpay {
 
         let totalPrice = prices.reduce((acc, price, i) => acc + price * quantities[i], 0);
 
+        const invoice = data.orderReference ?? ((Math.random() * (20 - 1 + 1) + 1) * orderDate).toString();
+        
         // Create a signature to securely verify the transaction
+        // ! NOTE: very important to be consistent 
         const signature = this.createPaymentSignature({
             merchantLogin: this.option?.merchantLogin as string,
             domain: this.option?.domain as string,
+            invoice, 
             orderDate,
-            invoice: orderDate.toString(),
             totalPrice,
             currency: data.currency,
             namesString: names.join(';'),
@@ -123,7 +126,7 @@ export class Wayforpay {
               <input type="hidden" name="merchantAccount" value="${this.option?.merchantLogin}" />
               <input type="hidden" name="merchantDomainName" value="${this.option?.domain}" />
               <input type="hidden" name="merchantSignature" value="${signature}" />
-              <input type="hidden" name="orderReference" value="${orderDate}" />
+              ${!data.orderReference ? `<input type="hidden" name="orderReference" value="${invoice}" />` : ''}
               <input type="hidden" name="orderDate" value="${orderDate}" />
               <input type="hidden" name="amount" value="${totalPrice}" />
               <input type="hidden" name="currency" value="${data.currency}" />

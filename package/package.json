@@ -1,6 +1,6 @@
 {
   "name": "wayforpay-ts-integration",
-  "version": "0.1.4",
+  "version": "0.1.6",
   "description": "Library for forms to go to the Wayforpay payment page.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
