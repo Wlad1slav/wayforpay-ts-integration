@@ -26,7 +26,7 @@ npm i wayforpay-ts-integration
 - [ ] Online Lending
 - [ ] Online Taxi Payment
 - [ ] Anti-Fraud API
-- [ ] Recurring Payments
+- [X] Regular Payments
 - [ ] Payment Modules for CMS
 - [ ] Store/Partner Creation
 - [ ] Payment QR Code Creation
@@ -278,7 +278,7 @@ The maximum period for which you can receive transactions is 31 days.
 
 #### Additional documentation
 - https://wiki.wayforpay.com/view/1736786
-- 
+
 ```typescript
 const wayforpay = new Wayforpay({
     merchantLogin: 'test_merch_n1',
@@ -288,6 +288,20 @@ const wayforpay = new Wayforpay({
 
 const response = await wayforpay.getTransactions();
 const transactions = response.data;
+```
+
+### 📋 Retrieving the Regular Payment Status
+
+The method is used to check the regular payment status by `orderReference`.
+
+> [!NOTE]  
+> The integration of this functionality is considered individually for each store. To proceed, contact sales@wayforpay.com, specifying the merchant's login, describing the situation, and mentioning that you need a `MerchantPassword`.
+
+#### Additional documentation
+- https://wiki.wayforpay.com/view/852526
+
+```typescript
+const status = await wayforpay.checkRegularPayment(orderReference, merchantPassword);
 ```
 
 ## Contributing

@@ -4,7 +4,8 @@ import {
     TRequestPayment,
     TSignatureListTransactions,
     TSignaturePayment,
-    TWayforpayOptions
+    TWayforpayOptions,
+    TWayforpayResponseRegularPaymentStatus
 } from "./types";
 import { envSpecifiedError } from "./messages";
 import crypto from "crypto";
@@ -190,5 +191,29 @@ export class Wayforpay {
         };
 
         return await axios.post('https://api.wayforpay.com/api', preparedData);
+    }
+
+    /**
+     * ## Regular payment
+     * The method is used to check the payment status by `orderReference`. 
+     * The request is generated on the merchant's side and transmitted 
+     * using the POST method to the URL `https://api.wayforpay.com/regularApi.`
+     * 
+     * * Note: The integration of this functionality is considered individually for each store. To proceed, please contact sales@wayforpay.com, specifying the merchant's name, describing the situation, and mentioning that you need a MerchantPassword.
+     * 
+     * ### Example
+     * ```typescript
+     * const status = await wayforpay.checkRegularPayment(orderReference, merchantPassword);
+     * ```
+     */
+    public async checkRegularPayment(orderReference: string, merchantPassword: string) {
+        const response = await axios.post("https://api.wayforpay.com/regularApi", {
+            requestType: "STATUS",
+            merchantAccount: this.option?.merchantLogin,
+            merchantPassword, 
+            orderReference
+        });
+
+        return response.data as TWayforpayResponseRegularPaymentStatus;
     }
 }
