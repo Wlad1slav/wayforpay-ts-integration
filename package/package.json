@@ -10,7 +10,8 @@
   ],
   "scripts": {
     "build": "tsc",
-    "update": "npm run build && npm version patch && npm publish"
+    "update": "npm run build && npm version patch && npm publish",
+    "test": "jest"
   },
   "author": "Vladyslav Fokin <vlad.fokin2004.vf@gmail.com> (https://github.com/Wlad1slav)",
   "license": "ISC",

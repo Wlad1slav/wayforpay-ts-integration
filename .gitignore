@@ -2,3 +2,4 @@
 *.tgz
 /.idea
 /packages/backend
+/node_modules
