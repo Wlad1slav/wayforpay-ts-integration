@@ -2,6 +2,8 @@ import { TWayforpayAvailableCurrency } from "./requests";
 
 export type TWayforpayRegularPaymentStatuses = 'Active' | 'Suspended' | 'Created' | 'Removed' | 'Confirmed' | 'Completed';
 
+export type TWayforpayTransactionStatus = 'Approved' | 'Expired' | 'Refund' | string;
+
 export type TWayforpayResponseRegularPaymentStatus = {
     reasonCode: number; // Код відмови, e.g., 4100
     reason: string; // Причина відмови, e.g., "Ok"
@@ -31,7 +33,7 @@ export type TWayforpayResponseTransactionDetails = {
     cardType: string; // Тип карти: Visa / MasterCard
     issuerBankCountry: number; // Країна карти
     issuerBankName: string; // Ім'я Банку емітента карти
-    transactionStatus: string; // Статус транзакції
+    transactionStatus: TWayforpayTransactionStatus; // Статус транзакції
     reason: string; // Причина відмови
     reasonCode: number; // Код відмови
     settlementDate: number; // Дата відшкодування транзакції мерчанту
@@ -46,7 +48,7 @@ export type TWayforpayResponseTransactionListItem = {
     createdDate: number; // Дата створення запиту в psp
     amount: number; // Сума замовлення
     currency: string; // Валюта замовлення
-    transactionStatus: 'Approved' | 'Expired' | 'Refund' | string; // Статус транзакції
+    transactionStatus: TWayforpayTransactionStatus; // Статус транзакції
     processingDate: number; // Дата процесування транзакції
     reasonCode?: string; // Причина відмови (може бути необов'язковим)
     reason?: string; // Код відмови (може бути необов'язковим)
