@@ -5,9 +5,10 @@ import {
     TSignatureListTransactions,
     TSignaturePayment,
     TWayforpayOptions,
-    TWayforpayResponseRegularPaymentStatus
+    TWayforpayResponseRegularPaymentStatus,
+    TRequestRegularPayment
 } from "./types";
-import { envSpecifiedError } from "./messages";
+import { envSpecifiedError, merchantPasswordSpecifiedError, secretSpecifiedError } from "./messages";
 import crypto from "crypto";
 import axios from "axios";
 
@@ -25,11 +26,14 @@ export class Wayforpay {
         if (!option) {
             const {
                 MERCHANT_LOGIN: merchantLogin,
-                MERCHANT_SECRET_KEY: merchantSecret
+                MERCHANT_SECRET_KEY: merchantSecret,
+                MERCHANT_PASSWORD: merchantPassword,
             } = process.env;
-            if (!merchantLogin || !merchantSecret)
+
+            if (!merchantLogin)
                 throw new Error(envSpecifiedError);
-            this.option = { merchantLogin, merchantSecret };
+
+            this.option = { merchantLogin, merchantSecret, merchantPassword };
         }
     }
 
@@ -85,10 +89,13 @@ export class Wayforpay {
      * @param cart
      * @param data
      */
-    public async createForm(cart: TCartElement[], data: TWayforpayRequestPayment = {
+    public async purchase(cart: TCartElement[], data: TWayforpayRequestPayment = {
         domain: 'example.com',
         currency: 'UAH'
     }) {
+        if (!this.option?.merchantSecret)
+            throw new Error(secretSpecifiedError);
+
         const orderDate = Date.now();
 
         // Extract product names, quantities, and prices from the cart
@@ -147,6 +154,11 @@ export class Wayforpay {
     }
 
     /**
+     * @deprecated Use `purchase` method instead.
+     */
+    public createForm = this.purchase;
+
+    /**
      * ## Transaction list
      * The TRANSACTION LIST query is used to retrieve a list of store transactions for a specific time period.
      *
@@ -192,23 +204,42 @@ export class Wayforpay {
     }
 
     /**
-     * ## Regular payment
-     * The method is used to check the payment status by `orderReference`. 
-     * The request is generated on the merchant's side and transmitted 
-     * using the POST method to the URL `https://api.wayforpay.com/regularApi.`
+     * # Regular payment
+     * 
+     * The request is generated on the merchant's side and transmitted by the POST method to the URL `https://api.wayforpay.com/regularApi`.
+     * 
+     * ## Documentation
+     * - https://wiki.wayforpay.com/view/852496
      * 
      * * Note: The integration of this functionality is considered individually for each store. To proceed, please contact sales@wayforpay.com, specifying the merchant's name, describing the situation, and mentioning that you need a MerchantPassword.
      * 
-     * ### Example
+     * ## Request types
+     * - `STATUS`: Returns the current status of the regular payment.
+     * - `SUSPEND`: Suspends the regular payment.
+     * - `RESUME`: Resumes the regular payment.
+     * - `REMOVE`: Removes the regular payment.
+     * 
+     * ## Documentation
+     * - https://wiki.wayforpay.com/view/852526
+     * 
+     * ## Example
      * ```typescript
-     * const status = await wayforpay.checkRegularPayment(orderReference, merchantPassword);
+     * const wayforpay = new Wayforpay({
+     *     merchantLogin: process.env.MERCHANT_LOGIN as string,
+     *     merchantPassword: process.env.MERCHANT_PASSWORD as string
+     * });
+     * 
+     * const regularPayment = await wayforpay.checkRegularPayment(orderReference, 'STATUS');
      * ```
      */
-    public async checkRegularPayment(orderReference: string, merchantPassword: string) {
+    public async regularPayment(orderReference: string, requestType: TRequestRegularPayment = 'STATUS') {
+        if (!this.option?.merchantPassword)
+            throw new Error(merchantPasswordSpecifiedError);
+
         const response = await axios.post("https://api.wayforpay.com/regularApi", {
-            requestType: "STATUS",
-            merchantAccount: this.option?.merchantLogin,
-            merchantPassword, 
+            requestType,
+            merchantAccount: this.option.merchantLogin,
+            merchantPassword: this.option.merchantPassword, 
             orderReference
         });
 

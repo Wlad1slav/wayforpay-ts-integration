@@ -23,7 +23,8 @@ export type TProduct = {
 
 export type TWayforpayOptions = {
     merchantLogin: string;
-    merchantSecret: string;
+    merchantSecret?: string;
+    merchantPassword?: string;
 };
 
 

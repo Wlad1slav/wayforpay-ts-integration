@@ -73,3 +73,5 @@ export type TRequestListTransactions = {
     dateBegin?: Date;
     dateEnd?: Date;
 };
+
+export type TRequestRegularPayment = 'STATUS' | 'SUSPEND' | 'RESUME' | 'REMOVE';
