@@ -14,6 +14,7 @@ npm i wayforpay-ts-integration
 ## ✨ Features
 
 - [X] Платежі
+- [X] Статус платежу
 - [X] Створення посилання на сторінку оплати
 - [ ] Оплата в один клік
 - [ ] Платіжний віджет
@@ -270,11 +271,11 @@ export async function GET(request: NextRequest) {
 
 ```typescript
 const wayforpay = new Wayforpay({
-    merchantLogin: 'test_merch_n1'
+    merchantLogin: 'test_merch_n1',
+    merchantSecret: 'flk3409refn54t54t*FNJRET'
 });
 
-const response = await wayforpay.getTransactions();
-const transactions = response.data;
+const transactions = await wayforpay.getTransactions();
 ```
 
 ### 📋 Реглярні платежі
@@ -284,14 +285,18 @@ const transactions = response.data;
 > [!NOTE]  
 > Інтеграція цього функціоналу розглядається індивідуально для кожного магазину. Для цього зв’яжіться з sales@wayforpay.com, вказавши merchant login, опишіть ситуацію та зазначте, що вам потрібен `MerchantPassword`.
 
-#### Додаткова документація
-- https://wiki.wayforpay.com/view/852496
-
 #### Типи запитів
 - `STATUS`: повертає поточний статус регулярного платежу.
 - `SUSPEND`: призупиняє регулярний платіж.
 - `RESUME`: відновлює регулярний платіж.
 - `REMOVE`: вилучає регулярний платіж.
+
+#### Додаткова документація
+- https://wiki.wayforpay.com/view/852496
+- https://wiki.wayforpay.com/view/852526
+- https://wiki.wayforpay.com/view/852506
+- https://wiki.wayforpay.com/view/852513
+- https://wiki.wayforpay.com/view/852521
 
 ```typescript
 const wayforpay = new Wayforpay({
@@ -300,6 +305,22 @@ const wayforpay = new Wayforpay({
 });
 
 const regularPayment = await wayforpay.regularPayment(orderReference, 'STATUS');
+```
+
+### 📋 Check Status
+
+Запит Check Status використовується для перевірки статусу платежу по `orderReference`.
+
+#### Додаткова документація
+- https://wiki.wayforpay.com/en/view/852117
+
+```typescript
+const wayforpay = new Wayforpay({
+    merchantLogin: 'test_merch_n1',
+    merchantSecret: 'flk3409refn54t54t*FNJRET'
+});
+
+const transaction = await wayforpay.checkStatus('5889_woo_w4p_1731157495');
 ```
 
 ## Контриб'ютинг

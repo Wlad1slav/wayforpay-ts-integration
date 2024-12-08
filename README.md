@@ -15,6 +15,7 @@ npm i wayforpay-ts-integration
 ## ✨ Features
 
 - [X] Payments
+- [X] Check Status
 - [X] Creating a link to the checkout page
 - [ ] One-Click Payment
 - [ ] Payment Widget
@@ -266,11 +267,11 @@ The maximum period for which you can receive transactions is 31 days.
 
 ```typescript
 const wayforpay = new Wayforpay({
-    merchantLogin: 'test_merch_n1'
+    merchantLogin: 'test_merch_n1',
+    merchantSecret: 'flk3409refn54t54t*FNJRET'
 });
 
-const response = await wayforpay.getTransactions();
-const transactions = response.data;
+const transactions = await wayforpay.getTransactions();
 ```
 
 ### 📋 Regular Payments
@@ -280,7 +281,7 @@ A method for interacting with regular payments.
 > [!NOTE]  
 > The integration of this functionality is considered individually for each store. To proceed, contact sales@wayforpay.com, specifying the merchant's login, describing the situation, and mentioning that you need a `MerchantPassword`.
 
-## Request types
+#### Request types
 - `STATUS`: Returns the current status of the regular payment.
 - `SUSPEND`: Suspends the regular payment.
 - `RESUME`: Resumes the regular payment.
@@ -288,6 +289,10 @@ A method for interacting with regular payments.
 
 #### Additional documentation
 - https://wiki.wayforpay.com/view/852496
+- https://wiki.wayforpay.com/view/852526
+- https://wiki.wayforpay.com/view/852506
+- https://wiki.wayforpay.com/view/852513
+- https://wiki.wayforpay.com/view/852521
 
 ```typescript
 const wayforpay = new Wayforpay({
@@ -296,6 +301,24 @@ const wayforpay = new Wayforpay({
 });
 
 const regularPayment = await wayforpay.regularPayment(orderReference, 'STATUS');
+```
+
+### 📋 Check Status
+
+Check Status request is used for checking of payment status on `orderReference`.
+
+The request is to be formed at the side of merchant and to be transferred through POST method to URL https://api.wayforpay.com/api.
+
+#### Additional documentation
+- https://wiki.wayforpay.com/en/view/852117
+
+```typescript
+const wayforpay = new Wayforpay({
+    merchantLogin: 'test_merch_n1',
+    merchantSecret: 'flk3409refn54t54t*FNJRET'
+});
+
+const transaction = await wayforpay.checkStatus('5889_woo_w4p_1731157495');
 ```
 
 ## Contributing
