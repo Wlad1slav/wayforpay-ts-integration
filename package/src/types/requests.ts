@@ -4,7 +4,16 @@ export type TWayforpayAvailableShippingMethods = 'nova' | 'meest' | 'ukrpost' | 
 export type TWayforpayAvailablePaymentPeriods = 'client' | 'none' | 'once' | 'daily' | 'weekly' | 'quarterly' | 'monthly' | 'halfyearly' | 'yearly';
 export type TWayforpayAvailablePaymentMethods = 'card' | 'googlePay' | 'applePay' | 'privat24' | 'lpTerminal' | 'delay' | 'bankCash' | 'qrCode' | 'masterPass' | 'visaCheckout' | 'bot' | 'payParts' | 'payPartsMono' | 'payPartsPrivat' | 'payPartsAbank' | 'instantAbank' | 'globusPlus' | 'OnusInstallment' | 'payPartsOtp' | 'payPartsSport';
 
-export type TRequestPayment = {
+/**
+ * @deprecated Use TWayforpayRequestPayment instead.
+ */
+export type TRequestPayment = TWayforpayRequestPayment;
+
+/**
+ * All possible payment options: https://wiki.wayforpay.com/view/852102
+ */
+export type TWayforpayRequestPayment = {
+    domain: string;
     merchantTransactionType?: 'AUTO' | 'AUTH' | 'SALE'; // Тип транзакції
     merchantTransactionSecureType?: 'AUTO'; // Тип безпеки для проходження транзакції
     apiVersion?: 1 | 2; // Версія протоколу

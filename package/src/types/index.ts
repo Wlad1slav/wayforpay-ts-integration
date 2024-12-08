@@ -22,7 +22,6 @@ export type TProduct = {
 };
 
 export type TWayforpayOptions = {
-    domain: string;
     merchantLogin: string;
     merchantSecret: string;
 };

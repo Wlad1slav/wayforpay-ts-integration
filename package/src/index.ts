@@ -1,7 +1,7 @@
 import {
     TCartElement,
     TRequestListTransactions,
-    TRequestPayment,
+    TWayforpayRequestPayment,
     TSignatureListTransactions,
     TSignaturePayment,
     TWayforpayOptions,
@@ -18,20 +18,18 @@ export class Wayforpay {
      * The class gets options to provide communication with the Wayforpay API. The options include your store domain, your merchant login, your merchant api token, and the currency you want to use.
      *
      * If options are not passed, then variables from the .env file are used.
-     * - `DOMAIN` — the domain of your Wayforpay store
      * - `MERCHANT_LOGIN` — the merchant login from the store settings
      * - `MERCHANT_SECRET_KEY` — the merchant secret key from the store settings
      */
     constructor(private option?: TWayforpayOptions) {
         if (!option) {
             const {
-                DOMAIN: domain,
                 MERCHANT_LOGIN: merchantLogin,
                 MERCHANT_SECRET_KEY: merchantSecret
             } = process.env;
-            if (!domain || !merchantLogin || !merchantSecret)
+            if (!merchantLogin || !merchantSecret)
                 throw new Error(envSpecifiedError);
-            this.option = { domain, merchantLogin, merchantSecret };
+            this.option = { merchantLogin, merchantSecret };
         }
     }
 
@@ -73,12 +71,12 @@ export class Wayforpay {
      * ```typescript
      * const wayforpay = new Wayforpay({
      *     merchantLogin: process.env.MERCHANT_LOGIN as string,
-     *     merchantSecret: process.env.MERCHANT_SECRET_KEY as string,
-     *     domain: process.env.DOMAIN as string,
+     *     merchantSecret: process.env.MERCHANT_SECRET_KEY as string
      * });
      *
      * // In `form` HTML is a form that should be sent to the front end and executed.
      * const form = await wayforpay.createForm(cart as TCartElement[], {
+     *     domain: 'example.com',
      *     currency: 'UAH',
      *     deliveryList: ["nova","other"],
      * });
@@ -87,7 +85,8 @@ export class Wayforpay {
      * @param cart
      * @param data
      */
-    public async createForm(cart: TCartElement[], data: TRequestPayment = {
+    public async createForm(cart: TCartElement[], data: TWayforpayRequestPayment = {
+        domain: 'example.com',
         currency: 'UAH'
     }) {
         const orderDate = Date.now();
@@ -105,7 +104,7 @@ export class Wayforpay {
         // ! NOTE: very important to be consistent 
         const signature = this.createPaymentSignature({
             merchantLogin: this.option?.merchantLogin as string,
-            domain: this.option?.domain as string,
+            domain: data.domain,
             invoice, 
             orderDate,
             totalPrice,
@@ -125,7 +124,7 @@ export class Wayforpay {
             <form id="wayforpayForm" action="https://secure.wayforpay.com/pay" method="POST">
               <!-- Payment form fields: Merchant account details and order information -->
               <input type="hidden" name="merchantAccount" value="${this.option?.merchantLogin}" />
-              <input type="hidden" name="merchantDomainName" value="${this.option?.domain}" />
+              <input type="hidden" name="merchantDomainName" value="${data.domain}" />
               <input type="hidden" name="merchantSignature" value="${signature}" />
               ${!data.orderReference ? `<input type="hidden" name="orderReference" value="${invoice}" />` : ''}
               <input type="hidden" name="orderDate" value="${orderDate}" />
@@ -160,8 +159,7 @@ export class Wayforpay {
      * ```typescript
      * const wayforpay = new Wayforpay({
      *     merchantLogin: process.env.MERCHANT_LOGIN as string,
-     *     merchantSecret: process.env.MERCHANT_SECRET_KEY as string,
-     *     domain: process.env.DOMAIN as string,
+     *     merchantSecret: process.env.MERCHANT_SECRET_KEY as string
      * });
      *
      * const response = await wayforpay.getTransactions();
