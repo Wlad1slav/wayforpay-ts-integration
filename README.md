@@ -4,7 +4,7 @@
 ![MIT License](https://img.shields.io/badge/license-ISC-green.svg)
 
 wayforpay-ts-integration — a TypeScript SDK for integrating with the Wayforpay payment system. The package provides easy
-access to the Wayforpay API for processing payments, creating payment forms, and retrieving transaction lists.
+access to the Wayforpay API for processing payments, creating payment forms, retrieving transaction lists, and regular payments.
 
 🇺🇦 [Українська README.md](/README-UK.md)
 
@@ -35,14 +35,6 @@ npm i wayforpay-ts-integration
 
 ![checkout-demo](https://github.com/user-attachments/assets/5ceb9ac8-dcf5-4413-8ad8-9a6ffa1356dc)
 
-## 🚀 Content
-
-- Creating a Store in Wayforpay
-- Installing the Package
-- Usage
-    - Payments
-    - Retrieving the List of Transactions
-
 ## 🏪 Creating a Store in Wayforpay
 
 Log in to the Wayforpay platform through the [official website](https://m.wayforpay.com/account/site/login).
@@ -57,15 +49,12 @@ After creating the store, go to its settings. There, find the **Merchant Details
 **Merchant login** and **Merchant secret key**. You need to specify these details in the options for the `Wayforpay`
 class or add them to the `.env` file in the root directory of your project.
 
-- `DOMAIN` — the domain of your Wayforpay store
 - `MERCHANT_LOGIN` — the merchant login from the store settings
 - `MERCHANT_SECRET_KEY` — the merchant secret key from the store settings
 
 > [!CAUTION]
 > **Do not use** the methods of this package on the client side. This may compromise your secret key. Use the
 > functionality only on the server side (e.g., in your API).
-
-[Example .env file](https://github.com/Wlad1slav/wayforpay-ts-integration/blob/main/packages/backend/.env.example)
 
 ## 📦 Installing the Package
 
@@ -89,7 +78,7 @@ Here’s what you need to know:
 4. You automatically execute the form for the user on the client side OR redirect the user to a page with this form and a script for its execution.
 5. After the form is submitted, the user is redirected to the Wayforpay page for order payment.
 
-In the `Wayforpay` class, you specify your merchant’s data. The `createForm` method generates an HTML form for payment, which should be automatically executed on the client side for the user.
+In the `Wayforpay` class, you specify your merchant’s data. The `purchase` method generates an HTML form for payment, which should be automatically executed on the client side for the user.
 
 The first parameter is the user’s cart. It should be passed as an array of objects with the `TCartElement` type.
 
@@ -107,11 +96,11 @@ import {Wayforpay, TCartElement} from "wayforpay-ts-integration";
 
 const wayforpay = new Wayforpay({
     merchantLogin: 'test_merch_n1',
-    merchantSecret: 'flk3409refn54t54t*FNJRET',
-    domain: 'www.market.ua',
+    merchantSecret: 'flk3409refn54t54t*FNJRET'
 });
 
-const form = await wayforpay.createForm(cart as TCartElement[], {
+const form = await wayforpay.purchase(cart as TCartElement[], {
+    domain: 'www.market.ua',
     currency: 'UAH'
 });
 ```
@@ -126,10 +115,7 @@ import {Wayforpay, TCartElement, TProduct, TUserCartElement} from "wayforpay-ts-
 
 const products: TProduct[] = [
   {id: '1', name: "Example product 1", price: 100},
-  {id: '2', name: "Example product 2", price: 15},
-  {id: '3', name: "Example product 3", price: 700},
-  {id: '4', name: "Example product 4", price: 80},
-  {id: '5', name: "Example product 5", price: 300},
+  {id: '2', name: "Example product 2", price: 15}
 ];
 
 app.post('/api/wayforpay/checkout', async (req: Request, res: Response) => {
@@ -154,11 +140,11 @@ app.post('/api/wayforpay/checkout', async (req: Request, res: Response) => {
     const wayforpay = new Wayforpay({
       merchantLogin: process.env.MERCHANT_LOGIN as string,
       merchantSecret: process.env.MERCHANT_SECRET_KEY as string,
-      domain: process.env.DOMAIN as string,
     });
 
     // Creates a form for a request to wayforpay
-    const form = await wayforpay.createForm(cart as TCartElement[], {
+    const form = await wayforpay.purchase(cart as TCartElement[], {
+      domain: 'example.com',
       currency: 'UAH',
       deliveryList: ["nova", "other"],
     });
@@ -230,13 +216,13 @@ export async function GET(request: NextRequest) {
 
     const merchantData = merchant.data as {
         merchantLogin: string;
-        domain: string;
     };
 
     const options = await hookOptions('Wayforpay');
 
     let optionsData: {
         currency: TWayforpayAvailableCurrency,
+        domain: 'example.com',
         [key: string]: string
     } = { currency: 'USD' };
 
@@ -246,8 +232,7 @@ export async function GET(request: NextRequest) {
 
     const wfp = new Wayforpay({
         merchantLogin: merchantData.merchantLogin,
-        merchantSecret: decrypt(merchant.secret),
-        domain: merchantData.domain,
+        merchantSecret: decrypt(merchant.secret)
     });
 
     const {searchParams} = new URL(request.url);
@@ -260,7 +245,7 @@ export async function GET(request: NextRequest) {
 
     const cart: TCartElement[] = [product];
 
-    const form = await wfp.createForm(cart, optionsData as TRequestPayment);
+    const form = await wfp.purchase(cart, optionsData as TRequestPayment);
 
     return new Response(form, {
         headers: { 'Content-Type': 'text/html' }
@@ -281,27 +266,36 @@ The maximum period for which you can receive transactions is 31 days.
 
 ```typescript
 const wayforpay = new Wayforpay({
-    merchantLogin: 'test_merch_n1',
-    merchantSecret: 'flk3409refn54t54t*FNJRET',
-    domain: 'www.market.ua',
+    merchantLogin: 'test_merch_n1'
 });
 
 const response = await wayforpay.getTransactions();
 const transactions = response.data;
 ```
 
-### 📋 Retrieving the Regular Payment Status
+### 📋 Regular Payments
 
-The method is used to check the regular payment status by `orderReference`.
+A method for interacting with regular payments.
 
 > [!NOTE]  
 > The integration of this functionality is considered individually for each store. To proceed, contact sales@wayforpay.com, specifying the merchant's login, describing the situation, and mentioning that you need a `MerchantPassword`.
 
+## Request types
+- `STATUS`: Returns the current status of the regular payment.
+- `SUSPEND`: Suspends the regular payment.
+- `RESUME`: Resumes the regular payment.
+- `REMOVE`: Removes the regular payment.
+
 #### Additional documentation
-- https://wiki.wayforpay.com/view/852526
+- https://wiki.wayforpay.com/view/852496
 
 ```typescript
-const status = await wayforpay.checkRegularPayment(orderReference, merchantPassword);
+const wayforpay = new Wayforpay({
+    merchantLogin: 'test_merch_n1',
+    merchantPassword: 'dds0a8dsa-0dasuiodshdsa0udfsn',
+});
+
+const regularPayment = await wayforpay.regularPayment(orderReference, 'STATUS');
 ```
 
 ## Contributing

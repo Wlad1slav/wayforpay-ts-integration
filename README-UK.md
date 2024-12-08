@@ -3,7 +3,7 @@
 ![Package version](https://img.shields.io/npm/v/wayforpay-ts-integration)
 ![MIT License](https://img.shields.io/badge/license-ISC-green.svg)
 
-wayforpay-ts-integration — TypeScript SDK для інтеграції з платіжною системою Wayforpay. Пакет забезпечує простий доступ до API Wayforpay для обробки платежів, створення платіжних форм, та отримання списку транзакцій. 
+wayforpay-ts-integration — TypeScript SDK для інтеграції з платіжною системою Wayforpay. Пакет забезпечує простий доступ до API Wayforpay для обробки платежів, створення платіжних форм, отримання списку транзакцій та роботи з регулярними платежами. 
 
 🇬🇧 [English README.md](/README.md)
 
@@ -14,7 +14,7 @@ npm i wayforpay-ts-integration
 ## ✨ Features
 
 - [X] Платежі
-- [Х] Створення посилання на сторінку оплати
+- [X] Створення посилання на сторінку оплати
 - [ ] Оплата в один клік
 - [ ] Платіжний віджет
 - [ ] Верифікація картки (Verify)
@@ -34,14 +34,6 @@ npm i wayforpay-ts-integration
 
 ![checkout-demo](https://github.com/user-attachments/assets/5ceb9ac8-dcf5-4413-8ad8-9a6ffa1356dc)
 
-## 🚀 Зміст
-
-- Створення магазину в Wayforpay
-- Встановлення пакету
-- Використання
-    - Платежі
-    - Отримання списку транзакцій
-
 ## 🏪 Створення магазину в Wayforpay
 
 Авторизуйтесь на платформі Wayforpay через [офіційний сайт](https://m.wayforpay.com/account/site/login).
@@ -56,15 +48,12 @@ npm i wayforpay-ts-integration
 *Merchant login** та **Merchant secret key**. Ці дані потрібно вказати в опціях класу `Wayforpay` або додати до файлу
 `.env` у кореневій директорії вашого проекту.
 
-- `DOMAIN` — домен вашого Wayforpay магазину
 - `MERCHANT_LOGIN` — логін мерчанта з налаштувань магазину
 - `MERCHANT_SECRET_KEY` — секретний ключ мерчанта з налаштувань магазину
 
 > [!CAUTION]
 > **Не використовуйте** методи цього пакету на клієнтській стороні. Це може скомпрометувати ваш секретний ключ.
 > Використовуйте функціонал лише на сервері (наприклад, у вашому API).
-
-[Приклад файлу .env](https://github.com/Wlad1slav/wayforpay-ts-integration/blob/main/packages/backend/.env.example)
 
 ### 📦 Встановлення пакету
 
@@ -89,7 +78,7 @@ npm i wayforpay-ts-integration
 4. ви на клієнтській частині автоматично виконуєте форму для користувача АБО перенаправляєте користувача на сторінку з цією формою та скриптом для її виконання,
 5. після виконання переданої форми відбувається перенаправлення на сторінку Wayforpay, де проходить оплата за замовлення.
 
-В клас `Wayforpay` ви вказуєте дані вашого мерчанта. Метод `createForm` створює HTML-форму для оплати, яку вам треба
+В клас `Wayforpay` ви вказуєте дані вашого мерчанта. Метод `purchase` створює HTML-форму для оплати, яку вам треба
 автоматично виконувати на клієнтській частині для користувача.
 
 Перший параметр — це кошик користувача. Параметром повинен передаватися масив об'єктів з типом `TCartElement`.
@@ -109,11 +98,11 @@ import {Wayforpay, TCartElement} from "wayforpay-ts-integration";
 
 const wayforpay = new Wayforpay({
     merchantLogin: 'test_merch_n1',
-    merchantSecret: 'flk3409refn54t54t*FNJRET',
-    domain: 'www.market.ua',
+    merchantSecret: 'flk3409refn54t54t*FNJRET'
 });
 
-const form = await wayforpay.createForm(cart as TCartElement[], {
+const form = await wayforpay.purchase(cart as TCartElement[], {
+    domain: 'www.market.ua',
     currency: 'UAH'
 });
 ```
@@ -128,10 +117,7 @@ import {Wayforpay, TCartElement, TProduct, TUserCartElement} from "wayforpay-ts-
 
 const products: TProduct[] = [
     {id: '1', name: "Example product 1", price: 100},
-    {id: '2', name: "Example product 2", price: 15},
-    {id: '3', name: "Example product 3", price: 700},
-    {id: '4', name: "Example product 4", price: 80},
-    {id: '5', name: "Example product 5", price: 300},
+    {id: '2', name: "Example product 2", price: 15}
 ];
 
 app.post('/api/wayforpay/checkout', async (req: Request, res: Response) => {
@@ -160,7 +146,8 @@ app.post('/api/wayforpay/checkout', async (req: Request, res: Response) => {
         });
 
         // Creates a form for a request to wayforpay
-        const form = await wayforpay.createForm(cart as TCartElement[], {
+        const form = await wayforpay.purchase(cart as TCartElement[], {
+            domain: 'example.com',
             currency: 'UAH',
             deliveryList: ["nova", "other"],
         });
@@ -233,13 +220,13 @@ export async function GET(request: NextRequest) {
 
     const merchantData = merchant.data as {
         merchantLogin: string;
-        domain: string;
     };
 
     const options = await hookOptions('Wayforpay');
 
     let optionsData: {
         currency: TWayforpayAvailableCurrency,
+        domain: 'example.com',
         [key: string]: string
     } = { currency: 'USD' };
 
@@ -249,8 +236,7 @@ export async function GET(request: NextRequest) {
 
     const wfp = new Wayforpay({
         merchantLogin: merchantData.merchantLogin,
-        merchantSecret: decrypt(merchant.secret),
-        domain: merchantData.domain,
+        merchantSecret: decrypt(merchant.secret)
     });
 
     const {searchParams} = new URL(request.url);
@@ -263,7 +249,7 @@ export async function GET(request: NextRequest) {
 
     const cart: TCartElement[] = [product];
 
-    const form = await wfp.createForm(cart, optionsData as TRequestPayment);
+    const form = await wfp.purchase(cart, optionsData as TRequestPayment);
 
     return new Response(form, {
         headers: { 'Content-Type': 'text/html' }
@@ -284,27 +270,36 @@ export async function GET(request: NextRequest) {
 
 ```typescript
 const wayforpay = new Wayforpay({
-    merchantLogin: 'test_merch_n1',
-    merchantSecret: 'flk3409refn54t54t*FNJRET',
-    domain: 'www.market.ua',
+    merchantLogin: 'test_merch_n1'
 });
 
 const response = await wayforpay.getTransactions();
 const transactions = response.data;
 ```
 
-### 📋 Отримання статусу регулярного платежу
+### 📋 Реглярні платежі
 
-Метод використовується для перевірки статусу платежу за допомогою `orderReference`.
+Метод для взаємодії з регулярними платежами.
 
 > [!NOTE]  
 > Інтеграція цього функціоналу розглядається індивідуально для кожного магазину. Для цього зв’яжіться з sales@wayforpay.com, вказавши merchant login, опишіть ситуацію та зазначте, що вам потрібен `MerchantPassword`.
 
 #### Додаткова документація
-- https://wiki.wayforpay.com/view/852526
+- https://wiki.wayforpay.com/view/852496
+
+#### Типи запитів
+- `STATUS`: повертає поточний статус регулярного платежу.
+- `SUSPEND`: призупиняє регулярний платіж.
+- `RESUME`: відновлює регулярний платіж.
+- `REMOVE`: вилучає регулярний платіж.
 
 ```typescript
-const status = await wayforpay.checkRegularPayment(orderReference, merchantPassword);
+const wayforpay = new Wayforpay({
+    merchantLogin: 'test_merch_n1',
+    merchantPassword: 'dds0a8dsa-0dasuiodshdsa0udfsn',
+});
+
+const regularPayment = await wayforpay.regularPayment(orderReference, 'STATUS');
 ```
 
 ## Контриб'ютинг
