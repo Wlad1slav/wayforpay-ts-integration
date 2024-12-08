@@ -266,7 +266,8 @@ The maximum period for which you can receive transactions is 31 days.
 
 ```typescript
 const wayforpay = new Wayforpay({
-    merchantLogin: 'test_merch_n1'
+    merchantLogin: 'test_merch_n1',
+    merchantSecret: decrypt(merchant.secret)
 });
 
 const response = await wayforpay.getTransactions();
@@ -280,7 +281,7 @@ A method for interacting with regular payments.
 > [!NOTE]  
 > The integration of this functionality is considered individually for each store. To proceed, contact sales@wayforpay.com, specifying the merchant's login, describing the situation, and mentioning that you need a `MerchantPassword`.
 
-## Request types
+#### Request types
 - `STATUS`: Returns the current status of the regular payment.
 - `SUSPEND`: Suspends the regular payment.
 - `RESUME`: Resumes the regular payment.

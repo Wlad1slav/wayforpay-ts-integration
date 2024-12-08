@@ -7,6 +7,7 @@ import {
     TWayforpayOptions,
     TWayforpayResponseRegularPaymentStatus,
     TRequestRegularPayment
+    TWayforpayResponseTransactionListItem
 } from "./types";
 import { envSpecifiedError, merchantPasswordSpecifiedError, secretSpecifiedError } from "./messages";
 import crypto from "crypto";
@@ -40,7 +41,7 @@ export class Wayforpay {
     private createSignature(params: string[]) {
         const signature = params.join(';');
         return (
-            crypto.createHmac('md5', this.option?.merchantSecret as string)
+            crypto.createHmac('md5', this.option.merchantSecret as string)
                 .update(signature)
                 .digest('hex')
         );
@@ -106,13 +107,13 @@ export class Wayforpay {
         let totalPrice = prices.reduce((acc, price, i) => acc + price * quantities[i], 0);
 
         const invoice = data.orderReference ?? ((Math.random() * (20 - 1 + 1) + 1) * orderDate).toString();
-        
+
         // Create a signature to securely verify the transaction
         // ! NOTE: very important to be consistent 
         const signature = this.createPaymentSignature({
             merchantLogin: this.option?.merchantLogin as string,
             domain: data.domain,
-            invoice, 
+            invoice,
             orderDate,
             totalPrice,
             currency: data.currency,
@@ -201,6 +202,9 @@ export class Wayforpay {
         };
 
         return await axios.post('https://api.wayforpay.com/api', preparedData);
+        const response = await axios.post('https://api.wayforpay.com/api', preparedData);
+
+        return response.data.transactionList as TWayforpayResponseTransactionListItem[];
     }
 
     /**
@@ -239,7 +243,7 @@ export class Wayforpay {
         const response = await axios.post("https://api.wayforpay.com/regularApi", {
             requestType,
             merchantAccount: this.option.merchantLogin,
-            merchantPassword: this.option.merchantPassword, 
+            merchantPassword: this.option.merchantPassword,
             orderReference
         });
 

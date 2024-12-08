@@ -17,3 +17,25 @@ export type TWayforpayResponseRegularPaymentStatus = {
     lastPayedStatus: string | null; // Статус останнього платежу, e.g., null
     nextPaymentDate: number | null; // Дата наступного платежу (Unix timestamp or null), e.g., null
 };
+
+export type TWayforpayResponseTransactionDetails = {
+    merchantAccount: string; // Merchant login
+    orderReference: string; // Унікальний номер замовлення в системі торговця
+    merchantSignature: string; // hash_hmac
+    amount: number; // Сума замовлення
+    currency: TWayforpayAvailableCurrency; // Валюта замовлення
+    authCode: string; // Код авторизації - присвоюється банком
+    createdDate: number; // Дата створення запиту в psp
+    processingDate: number; // Дата процесування транзакції
+    cardPan: string; // Маскування номеру картки
+    cardType: string; // Тип карти: Visa / MasterCard
+    issuerBankCountry: number; // Країна карти
+    issuerBankName: string; // Ім'я Банку емітента карти
+    transactionStatus: string; // Статус транзакції
+    reason: string; // Причина відмови
+    reasonCode: number; // Код відмови
+    settlementDate: number; // Дата відшкодування транзакції мерчанту
+    settlementAmount: number; // Сума відшкодування
+    fee: number; // Комісія psp
+    refundAmount: number; // Сума всіх повернутих коштів
+};
