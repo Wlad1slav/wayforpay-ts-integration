@@ -6,7 +6,8 @@ import {
     TSignaturePayment,
     TWayforpayOptions,
     TWayforpayResponseRegularPaymentStatus,
-    TRequestRegularPayment
+    TRequestRegularPayment,
+    TWayforpayResponseTransactionDetails,
     TWayforpayResponseTransactionListItem
 } from "./types";
 import { envSpecifiedError, merchantPasswordSpecifiedError, secretSpecifiedError } from "./messages";
@@ -39,6 +40,9 @@ export class Wayforpay {
     }
 
     private createSignature(params: string[]) {
+        if (!this.option?.merchantSecret)
+            throw new Error(secretSpecifiedError);
+
         const signature = params.join(';');
         return (
             crypto.createHmac('md5', this.option.merchantSecret as string)
@@ -159,6 +163,26 @@ export class Wayforpay {
      */
     public createForm = this.purchase;
 
+    public async checkStatus(orderReference: string, apiVersion: 1 | 2 = 1) {
+        if (!this.option?.merchantSecret)
+            throw new Error(secretSpecifiedError);
+
+        const signature = this.createSignature([
+            this.option.merchantLogin,
+            orderReference
+        ]);
+
+        const response = await axios.post<TWayforpayResponseTransactionDetails>('https://api.wayforpay.com/api', {
+            transactionType: 'CHECK_STATUS',
+            orderReference,
+            merchantAccount: this.option.merchantLogin,
+            merchantSignature: signature,
+            apiVersion
+        });
+
+        return response.data;
+    }
+
     /**
      * ## Transaction list
      * The TRANSACTION LIST query is used to retrieve a list of store transactions for a specific time period.
@@ -201,7 +225,6 @@ export class Wayforpay {
             })
         };
 
-        return await axios.post('https://api.wayforpay.com/api', preparedData);
         const response = await axios.post('https://api.wayforpay.com/api', preparedData);
 
         return response.data.transactionList as TWayforpayResponseTransactionListItem[];

@@ -39,3 +39,23 @@ export type TWayforpayResponseTransactionDetails = {
     fee: number; // Комісія psp
     refundAmount: number; // Сума всіх повернутих коштів
 };
+
+export type TWayforpayResponseTransactionListItem = {
+    transactionType: string; // Тип транзакції
+    orderReference: string; // Унікальний номер замовлення в системі торговця
+    createdDate: number; // Дата створення запиту в psp
+    amount: number; // Сума замовлення
+    currency: string; // Валюта замовлення
+    transactionStatus: 'Approved' | 'Expired' | 'Refund' | string; // Статус транзакції
+    processingDate: number; // Дата процесування транзакції
+    reasonCode?: string; // Причина відмови (може бути необов'язковим)
+    reason?: string; // Код відмови (може бути необов'язковим)
+    email: string; // Email клієнта
+    phone: string; // Номер телефону клієнта
+    paymentSystem: string; // Платіжний метод, яким була проведена оплата
+    cardPan: string; // Маскувати номер карти
+    cardType: string; // Тип карти: Visa / MasterCard
+    issuerBankCountry: string; // Країна карти
+    issuerBankName: string; // Ім'я Банку емітента карти
+    fee: number; // Комісія psp
+};
