@@ -91,10 +91,10 @@ export class Wayforpay {
      * });
      * ```
      *
-     * @param cart
+     * @param userCart
      * @param data
      */
-    public async purchase(cart: TCartElement[], data: TWayforpayRequestPayment = {
+    public async purchase(userCart: TCartElement[], data: TWayforpayRequestPayment = {
         domain: 'example.com',
         currency: 'UAH'
     }) {
@@ -102,6 +102,8 @@ export class Wayforpay {
             throw new Error(secretSpecifiedError);
 
         const orderDate = Date.now();
+
+        const cart = this.formatCart(userCart);
 
         // Extract product names, quantities, and prices from the cart
         const names = cart.map(item => item.product.name);
@@ -271,5 +273,17 @@ export class Wayforpay {
         });
 
         return response.data as TWayforpayResponseRegularPaymentStatus;
+    }
+
+    private formatCart(cart: TCartElement[]) {
+        const formatted =  cart.map((item) => ({
+            ...item,
+            product: {
+                ...item.product,
+                name: item.product.name.replaceAll('"', '')
+            }
+        }));
+
+        return formatted;
     }
 }

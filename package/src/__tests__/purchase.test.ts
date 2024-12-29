@@ -26,7 +26,7 @@ describe('Wayforpay.purchase', () => {
                 quantity: 2,
             },
             {
-                product: { name: 'Product 2', price: 200 },
+                product: { name: 'Product "2"', price: 200 },
                 quantity: 1,
             },
         ];
